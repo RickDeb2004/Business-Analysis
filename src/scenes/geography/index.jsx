@@ -4,6 +4,7 @@ import GeographyChart from "../../components/GeographyChart";
 import Header from "../../components/Header";
 import { tokens } from "../../theme";
 import { database } from "../../firebase"; // Import Firebase database service
+import {ref, get } from 'firebase/database';
 
 const Geography = () => {
   const theme = useTheme();
@@ -15,15 +16,15 @@ const Geography = () => {
     const fetchLocations = async () => {
       try {
         // Fetch locations data from Firebase Realtime Database
-        const snapshot = await database.ref("users").once("value");
+        const snapshot = await get(ref(database, "users"));
         const users = snapshot.val();
         const allLocations = [];
 
         // Extract locations from user data
         if (users) {
           Object.values(users).forEach((user) => {
-            if (user.formData && user.formData.locations) {
-              user.formData.locations.forEach((location) => {
+            if (user.formData && user.formData.salesPerUnit) {
+              user.formData.salesPerUnit.forEach((location) => {
                 allLocations.push(location);
               });
             }
@@ -64,7 +65,7 @@ const Geography = () => {
               border={`1px solid ${colors.grey[100]}`}
               borderRadius="4px"
             >
-              <GeographyChart locations={locations} />
+              <GeographyChart locationData={locations} />
             </Box>
           ) : (
             <Typography variant="body1" color="error">

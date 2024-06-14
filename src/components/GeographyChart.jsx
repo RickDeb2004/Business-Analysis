@@ -3,64 +3,67 @@ import { ResponsiveChoropleth } from "@nivo/geo";
 import { geoFeatures } from "../data/mockGeoFeatures";
 import { tokens } from "../theme";
 
-const GeographyChart = ({ locations }) => {
+const GeographyChart = ({ locationData }) => {
+  // console.log(locationData)
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
-  if (!locations) {
+  if (!locationData) {
     return null; // or you can return a placeholder or loading indicator
   }
 
-  // Create data array for the chart
-  const data = Object.entries(locations).flatMap(([userId, user]) =>
-    user.formData.locations.map((location, index) => ({
-      id: `${userId}-${index}`, // Generate a unique ID for each location using userId
-      value: 1, // You can set a constant value or calculate based on the number of occurrences
-      location: location, // Assuming location is an object with name and other properties
-    }))
-  );
+  const data = locationData.map((data, index) => ({
+    id: data.country, 
+    value: data.unitSales,
+  }));
+
+  // console.log(data);
 
   return (
     <ResponsiveChoropleth
-      data={data}
-      theme={{
-        axis: {
-          domain: {
-            line: {
-              stroke: colors.grey[100],
+        data={data}
+        features={geoFeatures.features}
+        margin={{ top: 0, right: 0, bottom: 0, left: 0 }}
+        colors="nivo"
+        domain={[ 0, 1000000 ]}
+        unknownColor="#666666"
+        label="properties.name"
+        valueFormat=".2s"
+        projectionTranslation={[ 0.5, 0.5 ]}
+        projectionRotation={[ 0, 0, 0 ]}
+        borderWidth={0.5}
+        borderColor="#152538"
+        legends={[
+            {
+                anchor: 'bottom-left',
+                direction: 'column',
+                justify: true,
+                translateX: 20,
+                translateY: -100,
+                itemsSpacing: 0,
+                itemWidth: 94,
+                itemHeight: 18,
+                itemDirection: 'left-to-right',
+                itemTextColor: '#fff',
+                itemOpacity: 0.85,
+                symbolSize: 18,
+                effects: [
+                    {
+                        on: 'hover',
+                        style: {
+                            itemTextColor: '#999999', 
+                            itemOpacity: 1
+                        }
+                    }
+                ]
+            }
+        ]}
+        theme={{
+          tooltip: {
+            container: {
+              color: "#000", 
             },
           },
-          legend: {
-            text: {
-              fill: colors.grey[100],
-            },
-          },
-          ticks: {
-            line: {
-              stroke: colors.grey[100],
-              strokeWidth: 1,
-            },
-            text: {
-              fill: colors.grey[100],
-            },
-          },
-        },
-        legends: {
-          text: {
-            fill: colors.grey[100],
-          },
-        },
-      }}
-      features={geoFeatures.features}
-      margin={{ top: 0, right: 0, bottom: 0, left: 0 }}
-      domain={[0, 1000000]}
-      unknownColor="#666666"
-      label="properties.name"
-      valueFormat=".2s"
-      projectionScale={150}
-      projectionTranslation={[0.5, 0.5]}
-      projectionRotation={[0, 0, 0]}
-      borderWidth={1.5}
-      borderColor="#ffffff"
+        }}
     />
   );
 };
