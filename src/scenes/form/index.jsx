@@ -1,13 +1,17 @@
-import { Box, Button, TextField } from "@mui/material";
+import { Box, Button, TextField, Autocomplete } from "@mui/material";
 import { Formik, FieldArray } from "formik";
 import * as yup from "yup";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import Header from "../../components/Header";
 import { getAuth } from "firebase/auth";
-import { getDatabase, ref, set } from "firebase/database";
+import { get, getDatabase, ref, set } from "firebase/database";
+import { useEffect, useState } from "react";
+import { database } from "../../firebase";
 
 const Form = () => {
+  const [data, setData] = useState([]);
   const isNonMobile = useMediaQuery("(min-width:600px)");
+  // console.log(countryData);
 
   const handleFormSubmit = (values) => {
     const auth = getAuth();
@@ -15,15 +19,31 @@ const Form = () => {
     const user = auth.currentUser;
 
     if (user) {
-      set(ref(database, 'users/' + user.uid + '/formData'), values)
+      set(ref(database, "users/" + user.uid + "/formData"), values)
         .then(() => {
-          console.log('Data saved successfully!');
+          console.log("Data saved successfully!");
         })
         .catch((error) => {
-          console.error('Error saving data:', error);
+          console.error("Error saving data:", error);
         });
     }
   };
+
+  useEffect(() => {
+    const fetchCountrydata = async () => {
+      try {
+        // Fetch locations data from Firebase Realtime Database
+        const snapshot = await get(ref(database, "countryData"));
+        const data = snapshot.val();
+        setData(data);
+        // console.log(data);
+      } catch (err) {
+        console.log(err);
+      }
+    };
+
+    fetchCountrydata();
+  }, []);
 
   return (
     <Box m="20px">
@@ -252,23 +272,38 @@ const Form = () => {
                         gap="30px"
                         gridTemplateColumns="repeat(4, minmax(0, 1fr))"
                       >
-                        <TextField
+                        <Autocomplete
                           fullWidth
-                          variant="filled"
-                          type="text"
-                          label="Country"
+                          options={data}
+                          getOptionLabel={(option) =>
+                            `${option["alpha-3"]} - ${option.name}`
+                          }
+                          onChange={(e, value) => {
+                            handleChange({
+                              target: {
+                                name: `salesPerUnit[${index}].country`,
+                                value: value ? value["alpha-3"] : "", // only the ISO code
+                              },
+                            });
+                          }}
                           onBlur={handleBlur}
-                          onChange={handleChange}
-                          value={sale.country}
-                          name={`salesPerUnit[${index}].country`}
-                          error={
-                            !!touched.salesPerUnit?.[index]?.country &&
-                            !!errors.salesPerUnit?.[index]?.country
-                          }
-                          helperText={
-                            touched.salesPerUnit?.[index]?.country &&
-                            errors.salesPerUnit?.[index]?.country
-                          }
+                          renderInput={(params) => (
+                            <TextField
+                              {...params}
+                              variant="filled"
+                              label="Country"
+                              name={`salesPerUnit[${index}].country`}
+                              error={
+                                !!touched.salesPerUnit?.[index]?.country &&
+                                !!errors.salesPerUnit?.[index]?.country
+                              }
+                              helperText={
+                                touched.salesPerUnit?.[index]?.country &&
+                                errors.salesPerUnit?.[index]?.country
+                              }
+                              sx={{ gridColumn: "span 2" }}
+                            />
+                          )}
                           sx={{ gridColumn: "span 2" }}
                         />
                         <TextField
@@ -369,7 +404,7 @@ const Form = () => {
             </Box>
             <Box display="flex" justifyContent="end" mt="20px">
               <Button type="submit" color="secondary" variant="contained">
-              Submit
+                Submit
               </Button>
             </Box>
           </form>
