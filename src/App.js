@@ -26,7 +26,7 @@ function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const handleLoginSuccess = (role) => {
     setIsLoggedIn(true);
-    if (role === "user" || role==="superadmin") {
+    if (role === "user" || role === "superadmin") {
       setIsSidebar(false);
       navigate("/admins");
     } else {
