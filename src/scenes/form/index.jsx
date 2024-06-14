@@ -4,11 +4,14 @@ import * as yup from "yup";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import Header from "../../components/Header";
 import { getAuth } from "firebase/auth";
-import { getDatabase, ref, set } from "firebase/database";
-import { countryData } from "../../data/mockData";
+import { get, getDatabase, ref, set } from "firebase/database";
+import { useEffect, useState } from "react";
+import { database } from "../../firebase";
 
 const Form = () => {
+  const [data, setData] = useState([]);
   const isNonMobile = useMediaQuery("(min-width:600px)");
+  // console.log(countryData);
 
   const handleFormSubmit = (values) => {
     const auth = getAuth();
@@ -25,6 +28,22 @@ const Form = () => {
         });
     }
   };
+
+  useEffect(() => {
+    const fetchCountrydata = async () => {
+      try {
+        // Fetch locations data from Firebase Realtime Database
+        const snapshot = await get(ref(database, "countryData"));
+        const data = snapshot.val();
+        setData(data);
+        // console.log(data);
+      } catch (err) {
+        console.log(err);
+      }
+    };
+
+    fetchCountrydata();
+  }, []);
 
   return (
     <Box m="20px">
@@ -255,7 +274,7 @@ const Form = () => {
                       >
                         <Autocomplete
                           fullWidth
-                          options={countryData}
+                          options={data}
                           getOptionLabel={(option) =>
                             `${option["alpha-3"]} - ${option.name}`
                           }
@@ -263,7 +282,7 @@ const Form = () => {
                             handleChange({
                               target: {
                                 name: `salesPerUnit[${index}].country`,
-                                value: value ? value["alpha-3"] : ""   // only the ISO code
+                                value: value ? value["alpha-3"] : "", // only the ISO code
                               },
                             });
                           }}
@@ -385,7 +404,7 @@ const Form = () => {
             </Box>
             <Box display="flex" justifyContent="end" mt="20px">
               <Button type="submit" color="secondary" variant="contained">
-              Submit
+                Submit
               </Button>
             </Box>
           </form>
