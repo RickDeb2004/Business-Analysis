@@ -182,7 +182,7 @@ const Dashboard = () => {
                 fontWeight="bold"
                 color={colors.greenAccent[500]}
               >
-                ${totalRevenue.toFixed(2)}
+                ${totalRevenue}
               </Typography>
             </Box>
             <Box>
