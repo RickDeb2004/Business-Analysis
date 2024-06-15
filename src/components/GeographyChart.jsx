@@ -1,12 +1,7 @@
-import { useTheme } from "@mui/material";
 import { ResponsiveChoropleth } from "@nivo/geo";
 import { geoFeatures } from "../data/mockGeoFeatures";
-import { tokens } from "../theme";
 
-const GeographyChart = ({ locationData }) => {
-  // console.log(locationData)
-  const theme = useTheme();
-  const colors = tokens(theme.palette.mode);
+const GeographyChart = ({ locationData, isDashboard }) => {
   if (!locationData) {
     return null; // or you can return a placeholder or loading indicator
   }
@@ -16,7 +11,8 @@ const GeographyChart = ({ locationData }) => {
     value: data.unitSales,
   }));
 
-  // console.log(data);
+  // Define the initial zoom level based on the `isDashboard` prop
+  const initialZoom = isDashboard ? 1 : 2;
 
   return (
     <ResponsiveChoropleth
@@ -30,15 +26,19 @@ const GeographyChart = ({ locationData }) => {
         valueFormat=".2s"
         projectionTranslation={[ 0.5, 0.5 ]}
         projectionRotation={[ 0, 0, 0 ]}
+        projectionScale={isDashboard ? 50 : 150}
         borderWidth={0.5}
         borderColor="#152538"
-        legends={[
+        isInteractive={true}
+        enableZoom={true}
+        legends={
+          !isDashboard ? [
             {
                 anchor: 'bottom-left',
                 direction: 'column',
                 justify: true,
                 translateX: 20,
-                translateY: -100,
+                translateY: 0,
                 itemsSpacing: 0,
                 itemWidth: 94,
                 itemHeight: 18,
@@ -56,7 +56,8 @@ const GeographyChart = ({ locationData }) => {
                     }
                 ]
             }
-        ]}
+          ] : []
+        }
         theme={{
           tooltip: {
             container: {
@@ -64,6 +65,10 @@ const GeographyChart = ({ locationData }) => {
             },
           },
         }}
+        // Control zoom behavior with the initial zoom level
+        zoom={initialZoom}
+        maxZoom={8}
+        minZoom={0.5}
     />
   );
 };
