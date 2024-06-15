@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import GeographyChart from "../../components/GeographyChart";
 import Header from "../../components/Header";
 import { tokens } from "../../theme";
-import { database } from "../../firebase"; // Import Firebase database service
+import { database, auth } from "../../firebase";
 import {ref, get } from 'firebase/database';
 
 const Geography = () => {
@@ -15,24 +15,21 @@ const Geography = () => {
   useEffect(() => {
     const fetchLocations = async () => {
       try {
-        // Fetch locations data from Firebase Realtime Database
-        const snapshot = await get(ref(database, "users"));
-        const users = snapshot.val();
-        const allLocations = [];
 
-        // Extract locations from user data
-        if (users) {
-          Object.values(users).forEach((user) => {
-            if (user.formData && user.formData.salesPerUnit) {
-              user.formData.salesPerUnit.forEach((location) => {
-                allLocations.push(location);
-              });
-            }
-          });
+        if (!auth.currentUser) {
+          console.error("User is not authenticated");
+          return;
         }
+        // Fetch locations data from Firebase Realtime Database for current user
+        const db = database;
+        const dataRef = ref(db, `users/${auth.currentUser.uid}/formData/salesPerUnit`);
+        const snapshot = await get(dataRef);
 
-        // Set the locations state and mark loading as false
-        setLocations(allLocations);
+        if (snapshot.exists()) {
+          const firebaseData = snapshot.val();
+          // console.log(firebaseData)
+          setLocations(firebaseData);
+        }
         setLoading(false);
       } catch (error) {
         console.error("Error fetching locations:", error);
