@@ -12,10 +12,42 @@ import GeographyChart from "../../components/GeographyChart";
 import BarChart from "../../components/BarChart";
 import StatBox from "../../components/StatBox";
 import ProgressCircle from "../../components/ProgressCircle";
+import { auth } from "../../firebase";
+import { useEffect, useState } from "react";
+import { getDatabase, get, ref } from "firebase/database";
 
 const Dashboard = () => {
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
+  const [totalRevenue, setTotalRevenue] = useState(0);
+
+  useEffect(() => {
+    const fetchTotalRevenue = async () => {
+      if (!auth.currentUser) {
+        console.error("User is not authenticated");
+        return;
+      }
+      const db = getDatabase();
+      const dataRef = ref(
+        db,
+        `users/${auth.currentUser.uid}/formData/salesPerMonth`
+      );
+      const snapshot = await get(dataRef);
+
+      if (snapshot.exists()) {
+        const firebaseData = snapshot.val();
+        const total = Object.values(firebaseData).reduce(
+          (acc, item) => acc + item.amount,
+          0
+        );
+        setTotalRevenue(total);
+      } else {
+        console.log("No data available");
+      }
+    };
+
+    fetchTotalRevenue();
+  }, []);
 
   return (
     <Box m="20px">
@@ -150,7 +182,7 @@ const Dashboard = () => {
                 fontWeight="bold"
                 color={colors.greenAccent[500]}
               >
-                $59,342.32
+                ${totalRevenue.toFixed(2)}
               </Typography>
             </Box>
             <Box>
