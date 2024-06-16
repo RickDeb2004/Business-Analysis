@@ -4,7 +4,7 @@ import GeographyChart from "../../components/GeographyChart";
 import Header from "../../components/Header";
 import { tokens } from "../../theme";
 import { database, auth } from "../../firebase";
-import {ref, get } from 'firebase/database';
+import { ref, get } from "firebase/database";
 
 const Geography = () => {
   const theme = useTheme();
@@ -15,19 +15,20 @@ const Geography = () => {
   useEffect(() => {
     const fetchLocations = async () => {
       try {
-
         if (!auth.currentUser) {
           console.error("User is not authenticated");
           return;
         }
         // Fetch locations data from Firebase Realtime Database for current user
         const db = database;
-        const dataRef = ref(db, `users/${auth.currentUser.uid}/formData/salesPerUnit`);
+        const dataRef = ref(
+          db,
+          `users/${auth.currentUser.uid}/formData/salesPerUnit`
+        );
         const snapshot = await get(dataRef);
 
         if (snapshot.exists()) {
           const firebaseData = snapshot.val();
-          // console.log(firebaseData)
           setLocations(firebaseData);
         }
         setLoading(false);
@@ -62,7 +63,7 @@ const Geography = () => {
               border={`1px solid ${colors.grey[100]}`}
               borderRadius="4px"
             >
-              <GeographyChart locationData={locations} />
+              <GeographyChart locationData={locations} isDashboard={false} />
             </Box>
           ) : (
             <Typography variant="body1" color="error">

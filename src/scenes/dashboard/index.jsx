@@ -12,7 +12,7 @@ import GeographyChart from "../../components/GeographyChart";
 import BarChart from "../../components/BarChart";
 import StatBox from "../../components/StatBox";
 import ProgressCircle from "../../components/ProgressCircle";
-import { auth } from "../../firebase";
+import { auth, database } from "../../firebase";
 import { useEffect, useState } from "react";
 import { getDatabase, get, ref } from "firebase/database";
 
@@ -20,6 +20,7 @@ const Dashboard = () => {
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
   const [totalRevenue, setTotalRevenue] = useState(0);
+  const [location, setLocations] = useState([]);
 
   useEffect(() => {
     const fetchTotalRevenue = async () => {
@@ -46,7 +47,31 @@ const Dashboard = () => {
       }
     };
 
+    const fetchLocations = async () => {
+      try {
+        if (!auth.currentUser) {
+          console.error("User is not authenticated");
+          return;
+        }
+        // Fetch locations data from Firebase Realtime Database for current user
+        const db = database;
+        const dataRef = ref(
+          db,
+          `users/${auth.currentUser.uid}/formData/salesPerUnit`
+        );
+        const snapshot = await get(dataRef);
+
+        if (snapshot.exists()) {
+          const firebaseData = snapshot.val();
+          setLocations(firebaseData);
+        }
+      } catch (error) {
+        console.error("Error fetching locations:", error);
+      }
+    };
+
     fetchTotalRevenue();
+    fetchLocations();
   }, []);
 
   return (
@@ -305,7 +330,7 @@ const Dashboard = () => {
             Geography Based Traffic
           </Typography>
           <Box height="200px">
-            <GeographyChart isDashboard={true} />
+            <GeographyChart isDashboard={true} locationData={location} />
           </Box>
         </Box>
       </Box>
