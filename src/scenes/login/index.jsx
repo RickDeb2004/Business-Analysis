@@ -51,6 +51,7 @@ const Login = ({ handleLoginSuccess }) => {
             uid: user.uid,
             name: userName,
             email: user.email,
+            role: role,
             signInTime: new Date().toISOString(),
             signOutTime: null,
           });
