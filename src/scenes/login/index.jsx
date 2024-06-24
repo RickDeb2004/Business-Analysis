@@ -1,10 +1,18 @@
 import { useState } from "react";
-import { Box, Button, TextField, Typography, useTheme, ToggleButton, ToggleButtonGroup } from "@mui/material";
+import {
+  Box,
+  Button,
+  TextField,
+  Typography,
+  useTheme,
+  ToggleButton,
+  ToggleButtonGroup,
+} from "@mui/material";
 import { tokens } from "../../theme";
 import { Link } from "react-router-dom";
 import { auth, database } from "../../firebase"; // Import Firebase services
 import { signInWithEmailAndPassword } from "firebase/auth";
-import { ref, get } from "firebase/database";
+import { ref, get, set, push } from "firebase/database"; // Import necessary database functions
 
 const Login = ({ handleLoginSuccess }) => {
   const theme = useTheme();
@@ -16,14 +24,39 @@ const Login = ({ handleLoginSuccess }) => {
 
   const handleLogin = async () => {
     try {
-      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const userCredential = await signInWithEmailAndPassword(
+        auth,
+        email,
+        password
+      );
       const user = userCredential.user;
 
       // Check user role from the database
-      const userRoleRef = ref(database, 'users/' + user.uid + '/role');
+      const userRoleRef = ref(database, "users/" + user.uid + "/role");
       const snapshot = await get(userRoleRef);
-      
+
       if (snapshot.exists() && snapshot.val() === role) {
+        // Get user name
+        const userNameRef = ref(database, "users/" + user.uid + "/name");
+        const userNameSnapshot = await get(userNameRef);
+        const userName = userNameSnapshot.exists()
+          ? userNameSnapshot.val()
+          : "Unknown User";
+
+        // Record the sign-in activity
+        if (role === "user") {
+          const userActivityRef = ref(database, "userActivity");
+          const newActivityRef = push(userActivityRef);
+          await set(newActivityRef, {
+            uid: user.uid,
+            name: userName,
+            email: user.email,
+            role: role,
+            signInTime: new Date().toISOString(),
+            signOutTime: null,
+          });
+        }
+
         handleLoginSuccess(role);
       } else {
         setError("Invalid credentials or role");
@@ -102,11 +135,13 @@ const Login = ({ handleLoginSuccess }) => {
         Login
       </Button>
       <Typography variant="body1" color={colors.grey[100]} mt="20px">
-        Don't have an account? <Link to="/signup" style={{ color: colors.grey[100] }}>Create one</Link>
+        Don't have an account?{" "}
+        <Link to="/signup" style={{ color: colors.grey[100] }}>
+          Create one
+        </Link>
       </Typography>
     </Box>
   );
 };
 
 export default Login;
-
