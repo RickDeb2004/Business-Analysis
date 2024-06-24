@@ -15,6 +15,8 @@ import ProgressCircle from "../../components/ProgressCircle";
 import { auth, database } from "../../firebase";
 import { useEffect, useState } from "react";
 import { getDatabase, get, ref } from "firebase/database";
+import jsPDF from "jspdf";
+import html2canvas from "html2canvas";
 
 const Dashboard = () => {
   const theme = useTheme();
@@ -74,8 +76,48 @@ const Dashboard = () => {
     fetchLocations();
   }, []);
 
+  const handleDownload = async () => {
+    const doc = new jsPDF("p", "pt", "a4");
+
+    // Capture the chart elements
+    const lineChartElement = document.getElementById("line-chart");
+    const barChartElement = document.getElementById("bar-chart");
+    const geoChartElement = document.getElementById("geo-chart");
+
+    const lineChartCanvas = await html2canvas(lineChartElement);
+    const barChartCanvas = await html2canvas(barChartElement);
+    const geoChartCanvas = await html2canvas(geoChartElement);
+
+    const lineChartImg = lineChartCanvas.toDataURL("image/png");
+    const barChartImg = barChartCanvas.toDataURL("image/png");
+    const geoChartImg = geoChartCanvas.toDataURL("image/png");
+
+    // Add content to PDF
+    doc.setFontSize(18);
+    doc.text("Dashboard Report", 20, 30);
+
+    doc.setFontSize(14);
+    doc.text("Revenue Generated", 20, 60);
+    doc.addImage(lineChartImg, "PNG", 20, 70, 555.28, 150);
+
+    doc.text("Sales Quantity", 20, 240);
+    doc.addImage(barChartImg, "PNG", 20, 250, 555.28, 150);
+
+    doc.text("Geography Based Traffic", 20, 420);
+    doc.addImage(geoChartImg, "PNG", 20, 430, 555.28, 150);
+
+    // Add stats
+    doc.text("Statistics", 20, 600);
+    doc.setFontSize(12);
+    doc.text(`Total Revenue: $${totalRevenue}`, 20, 620);
+    doc.text(`Total Locations: ${Object.keys(location).length}`, 20, 640);
+
+    // Save the PDF
+    doc.save("dashboard-report.pdf");
+  };
+
   return (
-    <Box m="20px">
+    <Box m="20px" id="dashboard-content">
       {/* HEADER */}
       <Box display="flex" justifyContent="space-between" alignItems="center">
         <Header title="DASHBOARD" subtitle="Welcome to your dashboard" />
@@ -89,6 +131,7 @@ const Dashboard = () => {
               fontWeight: "bold",
               padding: "10px 20px",
             }}
+            onClick={handleDownload}
           >
             <DownloadOutlinedIcon sx={{ mr: "10px" }} />
             Download Reports
@@ -186,6 +229,7 @@ const Dashboard = () => {
           gridColumn="span 8"
           gridRow="span 2"
           backgroundColor={colors.primary[400]}
+          id="line-chart"
         >
           <Box
             mt="25px"
@@ -304,6 +348,7 @@ const Dashboard = () => {
           gridColumn="span 4"
           gridRow="span 2"
           backgroundColor={colors.primary[400]}
+          id="bar-chart"
         >
           <Typography
             variant="h5"
@@ -321,6 +366,7 @@ const Dashboard = () => {
           gridRow="span 2"
           backgroundColor={colors.primary[400]}
           padding="30px"
+          id="geo-chart"
         >
           <Typography
             variant="h5"
