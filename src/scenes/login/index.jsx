@@ -53,7 +53,17 @@ const Login = ({ handleLoginSuccess }) => {
             email: user.email,
             role: role,
             signInTime: new Date().toISOString(),
-            signOutTime: null,
+          });
+        }
+
+        if(role === "admin") {
+          const adminActivityRef = ref(database, "adminActivity");
+          const newActivityRef = push(adminActivityRef);  
+          await set(newActivityRef, {
+            uid: user.uid,
+            name: userName,
+            email: user.email,
+            signInTime: new Date().toISOString(),
           });
         }
 

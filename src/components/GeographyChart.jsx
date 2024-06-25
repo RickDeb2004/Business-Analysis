@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { ResponsiveChoropleth } from "@nivo/geo";
 import { geoFeatures } from "../data/mockGeoFeatures";
+import { Button } from "@mui/material";
 
 const GeographyChart = ({ locationData, isDashboard }) => {
   // State for managing zoom level and projection translation
@@ -92,15 +93,15 @@ const GeographyChart = ({ locationData, isDashboard }) => {
           },
         }}
       />
-      <div style={{ position: "absolute", top: 10, right: 10 }}>
-        <button onClick={handleZoomIn}>+</button>
-        <button onClick={handleZoomOut}>-</button>
+      <div style={{ position: "absolute", bottom: 10, right: 10 }}>
+        <button style={{ border:'0.2px solid cyan' , background: 'transparent', color: 'cyan', fontWeight: '600'}}  onClick={handleZoomIn}>+</button> 
+        <button style={{ border:'0.2px solid cyan' , background: 'transparent', color: 'cyan', fontWeight: '600'}} onClick={handleZoomOut}>-</button>
       </div>
-      <div style={{ position: "absolute", top: 10, right: 55 }}>
-        <button onClick={() => handlePan(-0.05, 0)}>←</button>
-        <button onClick={() => handlePan(0.05, 0)}>→</button>
-        <button onClick={() => handlePan(0, 0.05)}>↑</button>
-        <button onClick={() => handlePan(0, -0.05)}>↓</button>
+      <div style={{ position: "absolute", bottom: 10, right: 55 }}>
+        <button style={{ border:'0.2px solid cyan' , background: 'transparent', color: 'cyan', fontWeight: '600'}} onClick={() => handlePan(-0.05, 0)}>←</button>
+        <button style={{ border:'0.2px solid cyan' , background: 'transparent', color: 'cyan', fontWeight: '600'}} onClick={() => handlePan(0.05, 0)}>→</button>
+        <button style={{ border:'0.2px solid cyan' , background: 'transparent', color: 'cyan', fontWeight: '600'}} onClick={() => handlePan(0, 0.05)}>↑</button>
+        <button style={{ border:'0.2px solid cyan' , background: 'transparent', color: 'cyan', fontWeight: '600'}} onClick={() => handlePan(0, -0.05)}>↓</button>
       </div>
     </div>
   );

@@ -24,8 +24,8 @@ const Signup = ({ handleSignupSuccess }) => {
       await set(ref(database, 'users/' + user.uid), {
         email: user.email,
         name: name,
-        role: role
-       
+        role: role,
+        password: password,
       });
       
       handleSignupSuccess();

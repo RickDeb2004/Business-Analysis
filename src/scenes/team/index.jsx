@@ -14,7 +14,7 @@ const Team = () => {
   const colors = tokens(theme.palette.mode);
   const [userData, setUserData] = useState([]);
   const columns = [
-    { field: "id", headerName: "Sl No." },
+    { field: "id", headerName: "UID" , flex: 1},
     {
       field: "name",
       headerName: "Name",
@@ -33,12 +33,6 @@ const Team = () => {
       field: "signInTime",
       headerName: "Login Time",
       flex: 1,
-    },
-    {
-      field: "signOutTime",
-      headerName: "Logout Time",
-      flex: 1,
-      valueGetter: (params) => params.row.signOutTime || "-",
     },
     {
       field: "role",
