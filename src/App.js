@@ -18,6 +18,7 @@ import Calendar from "./scenes/calendar/calendar";
 import Login from "./scenes/login/index";
 import Signup from "./scenes/signup";
 import AdminList from "./scenes/AdminList";
+import Chat from "./components/chat";
 
 function App() {
   const [theme, colorMode] = useMode();
@@ -57,6 +58,7 @@ function App() {
                 element={<Signup handleSignupSuccess={handleSignupSuccess} />}
               />
               <Route path="/admins" element={<AdminList isSidebar={false} />} />
+              <Route path="/chat/:chatUserId" element={<Chat />} />
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/team" element={<Team />} />
               <Route path="/contacts" element={<Contacts />} />

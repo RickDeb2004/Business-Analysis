@@ -7,12 +7,19 @@ import DarkModeOutlinedIcon from "@mui/icons-material/DarkModeOutlined";
 import NotificationsOutlinedIcon from "@mui/icons-material/NotificationsOutlined";
 import SettingsOutlinedIcon from "@mui/icons-material/SettingsOutlined";
 import PersonOutlinedIcon from "@mui/icons-material/PersonOutlined";
+import ChatIcon from "@mui/icons-material/Chat"; // Import the Chat icon
 import SearchIcon from "@mui/icons-material/Search";
+import { useNavigate } from 'react-router-dom'; // Import useNavigate
 
 const Topbar = () => {
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
   const colorMode = useContext(ColorModeContext);
+  const navigate = useNavigate(); // Initialize useNavigate
+
+  const handleChatClick = () => {
+    navigate('/chat/id'); // Navigate to the chat page
+  };
 
   return (
     <Box display="flex" justifyContent="space-between" p={2}>
@@ -45,6 +52,9 @@ const Topbar = () => {
         </IconButton>
         <IconButton>
           <PersonOutlinedIcon />
+        </IconButton>
+        <IconButton onClick={handleChatClick}> {/* Chat icon with click handler */}
+          <ChatIcon />
         </IconButton>
       </Box>
     </Box>
