@@ -1,13 +1,5 @@
 import { useState } from "react";
-import {
-  Box,
-  Button,
-  TextField,
-  Typography,
-  useTheme,
-  ToggleButton,
-  ToggleButtonGroup,
-} from "@mui/material";
+import { Box, Button, TextField, Typography, useTheme } from "@mui/material";
 import { tokens } from "../../theme";
 import { Link } from "react-router-dom";
 import { auth, database } from "../../firebase"; // Import Firebase services
@@ -19,7 +11,6 @@ const Login = ({ handleLoginSuccess }) => {
   const colors = tokens(theme.palette.mode);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [role, setRole] = useState("user");
   const [error, setError] = useState("");
 
   const handleLogin = async () => {
@@ -35,7 +26,9 @@ const Login = ({ handleLoginSuccess }) => {
       const userRoleRef = ref(database, "users/" + user.uid + "/role");
       const snapshot = await get(userRoleRef);
 
-      if (snapshot.exists() && snapshot.val() === role) {
+      if (snapshot.exists()) {
+        const role = snapshot.val();
+
         // Get user name
         const userNameRef = ref(database, "users/" + user.uid + "/name");
         const userNameSnapshot = await get(userNameRef);
@@ -44,9 +37,9 @@ const Login = ({ handleLoginSuccess }) => {
           : "Unknown User";
 
         // Record the sign-in activity
-        if (role === "user") {
-          const userActivityRef = ref(database, "userActivity");
-          const newActivityRef = push(userActivityRef);
+        if (role === "user" || role === "admin") {
+          const activityRef = ref(database, `${role}Activity`);
+          const newActivityRef = push(activityRef);
           await set(newActivityRef, {
             uid: user.uid,
             name: userName,
@@ -56,29 +49,12 @@ const Login = ({ handleLoginSuccess }) => {
           });
         }
 
-        if(role === "admin") {
-          const adminActivityRef = ref(database, "adminActivity");
-          const newActivityRef = push(adminActivityRef);  
-          await set(newActivityRef, {
-            uid: user.uid,
-            name: userName,
-            email: user.email,
-            signInTime: new Date().toISOString(),
-          });
-        }
-
         handleLoginSuccess(role);
       } else {
-        setError("Invalid credentials or role");
+        setError("Invalid credentials");
       }
     } catch (error) {
       setError(error.message);
-    }
-  };
-
-  const handleRoleChange = (event, newRole) => {
-    if (newRole !== null) {
-      setRole(newRole);
     }
   };
 
@@ -94,22 +70,6 @@ const Login = ({ handleLoginSuccess }) => {
       <Typography variant="h4" color={colors.grey[100]} mb="20px">
         Login
       </Typography>
-      <ToggleButtonGroup
-        value={role}
-        exclusive
-        onChange={handleRoleChange}
-        sx={{ marginBottom: "20px" }}
-      >
-        <ToggleButton value="user" sx={{ color: colors.grey[100] }}>
-          User
-        </ToggleButton>
-        <ToggleButton value="admin" sx={{ color: colors.grey[100] }}>
-          Admin
-        </ToggleButton>
-        <ToggleButton value="superadmin" sx={{ color: colors.grey[100] }}>
-          Super Admin
-        </ToggleButton>
-      </ToggleButtonGroup>
       <TextField
         label="Email"
         variant="outlined"
@@ -140,11 +100,12 @@ const Login = ({ handleLoginSuccess }) => {
           fontSize: "14px",
           fontWeight: "bold",
           padding: "10px 20px",
+          marginBottom: "20px",
         }}
       >
         Login
       </Button>
-      <Typography variant="body1" color={colors.grey[100]} mt="20px">
+      <Typography variant="body1" color={colors.grey[100]}>
         Don't have an account?{" "}
         <Link to="/signup" style={{ color: colors.grey[100] }}>
           Create one
