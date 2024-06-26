@@ -67,7 +67,7 @@ const Sidebar = () => {
     <Box
       sx={{
         "& .pro-sidebar-inner": {
-          background: `${colors.primary[400]} !important`,
+          background:  "#18181b",
         },
         "& .pro-icon-wrapper": {
           backgroundColor: "transparent !important",
@@ -81,6 +81,7 @@ const Sidebar = () => {
         "& .pro-menu-item.active": {
           color: "#6870fa !important",
         },
+       
       }}
     >
       <ProSidebar collapsed={isCollapsed}>

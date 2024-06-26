@@ -238,14 +238,44 @@ const Team = () => {
   return (
     <Box m="20px">
       <Header title="TEAM" subtitle="Managing the Team Members" />
-      <Button
-        onClick={() => setOpenDialog(true)}
-        variant="contained"
-        color="primary"
-        sx={{ marginBottom: "20px" }}
-      >
-        Add User
-      </Button>
+      <Box display="flex" justifyContent="flex-start" mb="20px">
+        <Button
+          onClick={() => setOpenDialog(true)}
+          variant="contained"
+          color="primary"
+          sx={{
+            display: "inline-flex",
+            height: "48px",
+            alignItems: "center",
+            justifyContent: "center",
+            borderRadius: "8px",
+            border: "1px solid #374151",
+            background:
+              "linear-gradient(110deg,#000103 45%,#1e2631 55%,#000103)",
+            backgroundSize: "200% 100%",
+            px: 6,
+            color: "#9CA3AF",
+            fontWeight: "500",
+            textTransform: "none",
+            animation: "shimmer 2s infinite",
+            transition: "color 0.3s",
+            "&:hover": {
+              color: "#FFFFFF",
+            },
+            "&:focus": {
+              outline: "none",
+              boxShadow: "0 0 0 4px rgba(148, 163, 184, 0.6)",
+            },
+            "@keyframes shimmer": {
+              "0%": { backgroundPosition: "200% 0" },
+              "100%": { backgroundPosition: "-200% 0" },
+            },
+          }}
+        >
+          Add User
+        </Button>
+      </Box>
+
       <Box
         m="40px 0 0 0"
         height="75vh"
@@ -269,7 +299,18 @@ const Team = () => {
           },
         }}
       >
-        <DataGrid checkboxSelection rows={userData} columns={columns} />
+        <DataGrid
+          checkboxSelection
+          rows={userData}
+          columns={columns}
+          sx={{
+            border: `5px solid ${colors.tealAccent[600]}`,
+            boxShadow: `0 0 10px ${colors.tealAccent[600]}`,
+            "@media (prefers-color-scheme: dark)": {
+              bgcolor: "#18181b",
+            },
+          }}
+        />
       </Box>
       <Dialog open={openDialog} onClose={handleDialogClose}>
         <DialogTitle>{selectedUser ? "Edit User" : "Add User"}</DialogTitle>
@@ -279,7 +320,6 @@ const Team = () => {
             label="Name"
             fullWidth
             variant="outlined"
-            className="text-white"
             value={formData.name}
             onChange={(e) => setFormData({ ...formData, name: e.target.value })}
           />

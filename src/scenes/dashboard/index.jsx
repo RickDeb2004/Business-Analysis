@@ -148,88 +148,122 @@ const Dashboard = () => {
       >
         {/* ROW 1 */}
         <Box
-          gridColumn="span 3"
-          backgroundColor={colors.primary[400]}
-          display="flex"
-          alignItems="center"
-          justifyContent="center"
-        >
-          <StatBox
-            title="30"
-            subtitle="Team Members"
-            progress="0.75"
-            increase="+14%"
-            icon={
-              <EmailIcon
-                sx={{ color: colors.greenAccent[600], fontSize: "26px" }}
-              />
-            }
-          />
-        </Box>
-        <Box
-          gridColumn="span 3"
-          backgroundColor={colors.primary[400]}
-          display="flex"
-          alignItems="center"
-          justifyContent="center"
-        >
-          <StatBox
-            title="431,225"
-            subtitle="Sales Obtained"
-            progress="0.50"
-            increase="+21%"
-            icon={
-              <PointOfSaleIcon
-                sx={{ color: colors.greenAccent[600], fontSize: "26px" }}
-              />
-            }
-          />
-        </Box>
-        <Box
-          gridColumn="span 3"
-          backgroundColor={colors.primary[400]}
-          display="flex"
-          alignItems="center"
-          justifyContent="center"
-        >
-          <StatBox
-            title="32,441"
-            subtitle="New Clients"
-            progress="0.30"
-            increase="+5%"
-            icon={
-              <PersonAddIcon
-                sx={{ color: colors.greenAccent[600], fontSize: "26px" }}
-              />
-            }
-          />
-        </Box>
-        <Box
-          gridColumn="span 3"
-          backgroundColor={colors.primary[400]}
-          display="flex"
-          alignItems="center"
-          justifyContent="center"
-        >
-          <StatBox
-            title="1,325,134"
-            subtitle="Traffic Received"
-            progress="0.80"
-            increase="+43%"
-            icon={
-              <TrafficIcon
-                sx={{ color: colors.greenAccent[600], fontSize: "26px" }}
-              />
-            }
-          />
-        </Box>
-
+  gridColumn="span 3"
+  backgroundColor={colors.primary[400]}
+  display="flex"
+  alignItems="center"
+  justifyContent="center"
+  sx={{
+    border: `2px solid ${colors.tealAccent[600]}`,
+    boxShadow: `0 0 10px ${colors.tealAccent[600]}`,
+    '@media (prefers-color-scheme: dark)': {
+      bgcolor: '#18181b', // Equivalent to dark:bg-zinc-900
+    },
+  }}
+>
+  <StatBox
+    title="30"
+    subtitle="Team Members"
+    progress="0.75"
+    increase="+14%"
+    icon={
+      <EmailIcon
+        sx={{ color: colors.greenAccent[600], fontSize: "26px" }}
+      />
+    }
+  />
+</Box>
+<Box
+  gridColumn="span 3"
+  backgroundColor={colors.primary[400]}
+  display="flex"
+  alignItems="center"
+  justifyContent="center"
+  sx={{
+    border: `2px solid ${colors.tealAccent[600]}`,
+    boxShadow: `0 0 10px ${colors.tealAccent[600]}`,
+    '@media (prefers-color-scheme: dark)': {
+      bgcolor: '#18181b', // Equivalent to dark:bg-zinc-900
+    },
+  }}
+>
+  <StatBox
+    title="431,225"
+    subtitle="Sales Obtained"
+    progress="0.50"
+    increase="+21%"
+    icon={
+      <PointOfSaleIcon
+        sx={{ color: colors.greenAccent[600], fontSize: "26px" }}
+      />
+    }
+  />
+</Box>
+<Box
+  gridColumn="span 3"
+  backgroundColor={colors.primary[400]}
+  display="flex"
+  alignItems="center"
+  justifyContent="center"
+  sx={{
+    border: `2px solid ${colors.purpleAccent[600]}`,
+    boxShadow: `0 0 10px ${colors.purpleAccent[600]}`,
+    '@media (prefers-color-scheme: dark)': {
+      bgcolor: '#18181b', // Equivalent to dark:bg-zinc-900
+    },
+  }}
+>
+  <StatBox
+    title="32,441"
+    subtitle="New Clients"
+    progress="0.30"
+    increase="+5%"
+    icon={
+      <PersonAddIcon
+        sx={{ color: colors.greenAccent[600], fontSize: "26px" }}
+      />
+    }
+  />
+</Box>
+<Box
+  gridColumn="span 3"
+  backgroundColor={colors.primary[400]}
+  display="flex"
+  alignItems="center"
+  justifyContent="center"
+  sx={{
+    border: `2px solid ${colors.tealAccent[600]}`,
+    boxShadow: `0 0 10px ${colors.tealAccent[600]}`,
+    '@media (prefers-color-scheme: dark)': {
+      bgcolor: '#18181b', // Equivalent to dark:bg-zinc-900
+    },
+  }}
+>
+  <StatBox
+    title="1,325,134"
+    subtitle="Traffic Received"
+    progress="0.80"
+    increase="+43%"
+    icon={
+      <TrafficIcon
+        sx={{ color: colors.greenAccent[600], fontSize: "26px" }}
+      />
+    }
+  />
+</Box>
         {/* ROW 2 */}
         <Box
           gridColumn="span 8"
           gridRow="span 2"
           backgroundColor={colors.primary[400]}
           id="line-chart"
+          sx={{
+            border: `2px solid ${colors.tealAccent[600]}`,
+            boxShadow: `0 0 10px ${colors.tealAccent[600]}`,
+            '@media (prefers-color-scheme: dark)': {
+              bgcolor: '#18181b', // Equivalent to dark:bg-zinc-900
+            },
+          }}
         >
           <Box
             mt="25px"
@@ -271,6 +305,13 @@ const Dashboard = () => {
           gridRow="span 2"
           backgroundColor={colors.primary[400]}
           overflow="auto"
+          sx={{
+            border: `2px solid ${colors.tealAccent[600]}`,
+            boxShadow: `0 0 10px ${colors.tealAccent[600]}`,
+            '@media (prefers-color-scheme: dark)': {
+              bgcolor: '#18181b', // Equivalent to dark:bg-zinc-900
+            },
+          }}
         >
           <Box
             display="flex"
@@ -292,6 +333,10 @@ const Dashboard = () => {
               alignItems="center"
               borderBottom={`4px solid ${colors.primary[500]}`}
               p="15px"
+              sx={{
+                border: `2px solid ${colors.grey[600]}`,
+                boxShadow: `0 0 10px ${colors.grey[600]}`,
+              }}
             >
               <Box>
                 <Typography
@@ -323,6 +368,13 @@ const Dashboard = () => {
           gridRow="span 2"
           backgroundColor={colors.primary[400]}
           p="30px"
+          sx={{
+            border: `2px solid ${colors.tealAccent[600]}`,
+            boxShadow: `0 0 10px ${colors.tealAccent[600]}`,
+            '@media (prefers-color-scheme: dark)': {
+              bgcolor: '#18181b', // Equivalent to dark:bg-zinc-900
+            },
+          }}
         >
           <Typography variant="h5" fontWeight="600">
             Campaign
@@ -332,6 +384,7 @@ const Dashboard = () => {
             flexDirection="column"
             alignItems="center"
             mt="25px"
+         
           >
             <ProgressCircle size="125" />
             <Typography
@@ -349,6 +402,14 @@ const Dashboard = () => {
           gridRow="span 2"
           backgroundColor={colors.primary[400]}
           id="bar-chart"
+          sx={{
+            border: `2px solid ${colors.tealAccent[600]}`,
+            boxShadow: `0 0 10px ${colors.tealAccent[600]}`,
+            '@media (prefers-color-scheme: dark)': {
+              bgcolor: '#18181b', // Equivalent to dark:bg-zinc-900
+            },
+            
+          }}
         >
           <Typography
             variant="h5"
@@ -367,6 +428,13 @@ const Dashboard = () => {
           backgroundColor={colors.primary[400]}
           padding="30px"
           id="geo-chart"
+          sx={{
+            border: `2px solid ${colors.tealAccent[600]}`,
+            boxShadow: `0 0 10px ${colors.tealAccent[600]}`,
+            '@media (prefers-color-scheme: dark)': {
+              bgcolor: '#18181b', // Equivalent to dark:bg-zinc-900
+            },
+          }}
         >
           <Typography
             variant="h5"
