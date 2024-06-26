@@ -65,7 +65,14 @@ const Login = ({ handleLoginSuccess }) => {
       alignItems="center"
       justifyContent="center"
       minHeight="100vh"
-      bgcolor={colors.primary[500]}
+      sx={{
+        bgcolor: 'background.default',
+       
+        
+        '@media (prefers-color-scheme: dark)': {
+          bgcolor: '#18181b',
+        },
+      }}
     >
       <Typography variant="h4" color={colors.grey[100]} mb="20px">
         Login
