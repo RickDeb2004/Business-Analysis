@@ -167,8 +167,8 @@ const Contacts = () => {
   return (
     <Box m="20px">
       <Header
-        title="CONTACTS"
-        subtitle="List of Contacts for Future Reference"
+        title="TEAM INFO"
+        subtitle="List of Team's Information"
       />
       <Button
         onClick={handleAddContact}
