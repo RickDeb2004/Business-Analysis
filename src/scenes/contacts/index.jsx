@@ -166,10 +166,7 @@ const Contacts = () => {
 
   return (
     <Box m="20px">
-      <Header
-        title="TEAM INFO"
-        subtitle="List of Team's Information"
-      />
+      <Header title="TEAM INFO" subtitle="List of Team's Information" />
       <Button
         onClick={handleAddContact}
         variant="contained"
@@ -213,10 +210,10 @@ const Contacts = () => {
       </Box>
 
       <Dialog open={openDialog} onClose={handleDialogClose}>
-        <DialogTitle>
+        <DialogTitle sx={{ backgroundColor: "#000000" }}>
           {selectedContact ? "Edit Contact" : "Add Contact"}
         </DialogTitle>
-        <DialogContent>
+        <DialogContent sx={{ backgroundColor: "#000000" }}>
           <TextField
             margin="dense"
             label="Registrar ID"
@@ -226,6 +223,14 @@ const Contacts = () => {
             onChange={(e) =>
               setFormData({ ...formData, registrarId: e.target.value })
             }
+            sx={{
+              marginBottom: "10px",
+              boxShadow:
+              "0px 2px 3px -1px rgba(0,0,0,0.1), 0px 1px 0px 0px rgba(25,28,33,0.02), 0px 0px 0px 1px rgba(25,28,33,0.08)",
+              "&:hover": {
+                boxShadow: "0px 0px 8px 2px rgba(33,150,243,0.5)",
+              },
+            }}
           />
           <TextField
             margin="dense"
@@ -234,6 +239,14 @@ const Contacts = () => {
             variant="outlined"
             value={formData.name}
             onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+            sx={{
+              marginBottom: "10px",
+              boxShadow:
+              "0px 2px 3px -1px rgba(0,0,0,0.1), 0px 1px 0px 0px rgba(25,28,33,0.02), 0px 0px 0px 1px rgba(25,28,33,0.08)",
+              "&:hover": {
+                boxShadow: "0px 0px 8px 2px rgba(33,150,243,0.5)",
+              },
+            }}
           />
           <TextField
             margin="dense"
@@ -243,6 +256,14 @@ const Contacts = () => {
             variant="outlined"
             value={formData.age}
             onChange={(e) => setFormData({ ...formData, age: e.target.value })}
+            sx={{
+              marginBottom: "10px",
+              boxShadow:
+              "0px 2px 3px -1px rgba(0,0,0,0.1), 0px 1px 0px 0px rgba(25,28,33,0.02), 0px 0px 0px 1px rgba(25,28,33,0.08)",
+              "&:hover": {
+                boxShadow: "0px 0px 8px 2px rgba(33,150,243,0.5)",
+              },
+            }}
           />
           <TextField
             margin="dense"
@@ -253,6 +274,14 @@ const Contacts = () => {
             onChange={(e) =>
               setFormData({ ...formData, phone: e.target.value })
             }
+            sx={{
+              marginBottom: "10px",
+              boxShadow:
+              "0px 2px 3px -1px rgba(0,0,0,0.1), 0px 1px 0px 0px rgba(25,28,33,0.02), 0px 0px 0px 1px rgba(25,28,33,0.08)",
+              "&:hover": {
+                boxShadow: "0px 0px 8px 2px rgba(33,150,243,0.5)",
+              },
+            }}
           />
           <TextField
             margin="dense"
@@ -263,6 +292,14 @@ const Contacts = () => {
             onChange={(e) =>
               setFormData({ ...formData, email: e.target.value })
             }
+            sx={{
+              marginBottom: "10px",
+              boxShadow:
+              "0px 2px 3px -1px rgba(0,0,0,0.1), 0px 1px 0px 0px rgba(25,28,33,0.02), 0px 0px 0px 1px rgba(25,28,33,0.08)",
+              "&:hover": {
+                boxShadow: "0px 0px 8px 2px rgba(33,150,243,0.5)",
+              },
+            }}
           />
           <TextField
             margin="dense"
@@ -273,6 +310,14 @@ const Contacts = () => {
             onChange={(e) =>
               setFormData({ ...formData, address: e.target.value })
             }
+            sx={{
+              marginBottom: "10px",
+              boxShadow:
+              "0px 2px 3px -1px rgba(0,0,0,0.1), 0px 1px 0px 0px rgba(25,28,33,0.02), 0px 0px 0px 1px rgba(25,28,33,0.08)",
+              "&:hover": {
+                boxShadow: "0px 0px 8px 2px rgba(33,150,243,0.5)",
+              },
+            }}
           />
           <TextField
             margin="dense"
@@ -281,6 +326,14 @@ const Contacts = () => {
             variant="outlined"
             value={formData.city}
             onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+            sx={{
+              marginBottom: "10px",
+              boxShadow:
+              "0px 2px 3px -1px rgba(0,0,0,0.1), 0px 1px 0px 0px rgba(25,28,33,0.02), 0px 0px 0px 1px rgba(25,28,33,0.08)",
+              "&:hover": {
+                boxShadow: "0px 0px 8px 2px rgba(33,150,243,0.5)",
+              },
+            }}
           />
           <TextField
             margin="dense"
@@ -291,13 +344,23 @@ const Contacts = () => {
             onChange={(e) =>
               setFormData({ ...formData, zipCode: e.target.value })
             }
+            sx={{
+              marginBottom: "10px",
+              boxShadow:
+              "0px 2px 3px -1px rgba(0,0,0,0.1), 0px 1px 0px 0px rgba(25,28,33,0.02), 0px 0px 0px 1px rgba(25,28,33,0.08)",
+              "&:hover": {
+                boxShadow: "0px 0px 8px 2px rgba(33,150,243,0.5)",
+              },
+            }}
           />
+
+          
         </DialogContent>
-        <DialogActions>
-          <Button onClick={handleDialogClose} color="primary">
+        <DialogActions sx={{ backgroundColor: "#000000" }}>
+          <Button onClick={handleDialogClose} color="secondary">
             Cancel
           </Button>
-          <Button onClick={handleFormSubmit} color="primary">
+          <Button onClick={handleFormSubmit} color="info">
             {selectedContact ? "Save" : "Add"}
           </Button>
         </DialogActions>
