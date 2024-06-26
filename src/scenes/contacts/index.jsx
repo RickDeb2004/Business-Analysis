@@ -6,18 +6,14 @@ import {
   DialogContent,
   DialogTitle,
   TextField,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
   useTheme,
 } from "@mui/material";
 import { DataGrid, GridToolbar } from "@mui/x-data-grid";
 import { tokens } from "../../theme";
 import Header from "../../components/Header";
 import { useEffect, useState } from "react";
+import { getDatabase, ref, set, update, remove, get } from "firebase/database";
 import { database } from "../../firebase";
-import { ref, set, update, remove, push ,get} from "firebase/database";
 import { v4 as uuidv4 } from "uuid";
 
 const Contacts = () => {
@@ -27,7 +23,6 @@ const Contacts = () => {
   const [openDialog, setOpenDialog] = useState(false);
   const [selectedContact, setSelectedContact] = useState(null);
   const [formData, setFormData] = useState({
-    id: "",
     registrarId: "",
     name: "",
     age: "",
@@ -41,19 +36,8 @@ const Contacts = () => {
   const columns = [
     { field: "id", headerName: "ID", flex: 0.5 },
     { field: "registrarId", headerName: "Registrar ID" },
-    {
-      field: "name",
-      headerName: "Name",
-      flex: 1,
-      cellClassName: "name-column--cell",
-    },
-    {
-      field: "age",
-      headerName: "Age",
-      type: "number",
-      headerAlign: "left",
-      align: "left",
-    },
+    { field: "name", headerName: "Name", flex: 1 },
+    { field: "age", headerName: "Age", type: "number" },
     { field: "phone", headerName: "Phone Number", flex: 1 },
     { field: "email", headerName: "Email", flex: 1 },
     { field: "address", headerName: "Address", flex: 1 },
@@ -64,25 +48,53 @@ const Contacts = () => {
       headerName: "Actions",
       flex: 1,
       renderCell: ({ row }) => (
-        <Button onClick={() => handleEditContact(row)} sx={{ color: colors.grey[100] }}>Edit</Button>
+        <Button
+          onClick={() => handleEditContact(row)}
+          sx={{ color: colors.grey[100] }}
+        >
+          Edit
+        </Button>
+      ),
+    },
+    {
+      field: "delete",
+      headerName: "Delete",
+      flex: 1,
+      renderCell: ({ row }) => (
+        <Button
+          onClick={() => handleDeleteContact(row)}
+          sx={{ color: colors.grey[100] }}
+        >
+          Delete
+        </Button>
       ),
     },
   ];
 
   useEffect(() => {
-    const fetchData = async () => {
-      const contactsRef = ref(database, "contacts");
-      const snapshot = await get(contactsRef);
-      if (snapshot.exists()) {
-        setContacts(Object.values(snapshot.val()));
+    const fetchContacts = async () => {
+      try {
+        const contactsRef = ref(database, "contacts");
+        const snapshot = await get(contactsRef);
+        if (snapshot.exists()) {
+          const data = snapshot.val();
+          const contactsArray = Object.keys(data).map((key) => ({
+            id: key,
+            ...data[key],
+          }));
+          setContacts(contactsArray);
+        } else {
+          setContacts([]);
+        }
+      } catch (error) {
+        console.error("Error fetching contacts:", error);
       }
     };
-    fetchData();
+    fetchContacts();
   }, []);
 
   const handleAddContact = () => {
     setFormData({
-      id: "",
       registrarId: "",
       name: "",
       age: "",
@@ -92,6 +104,7 @@ const Contacts = () => {
       city: "",
       zipCode: "",
     });
+    setSelectedContact(null);
     setOpenDialog(true);
   };
 
@@ -101,10 +114,15 @@ const Contacts = () => {
     setOpenDialog(true);
   };
 
-  const handleDeleteContact = async (id) => {
-    if (window.confirm("Are you sure you want to delete this contact?")) {
-      const contactRef = ref(database, `contacts/${id}`);
+  const handleDeleteContact = async (contact) => {
+    try {
+      const contactRef = ref(database, `contacts/${contact.id}`);
       await remove(contactRef);
+      setContacts((prevContacts) =>
+        prevContacts.filter((c) => c.id !== contact.id)
+      );
+    } catch (error) {
+      console.error("Error deleting contact:", error);
     }
   };
 
@@ -112,7 +130,6 @@ const Contacts = () => {
     setOpenDialog(false);
     setSelectedContact(null);
     setFormData({
-      id: "",
       registrarId: "",
       name: "",
       age: "",
@@ -125,16 +142,26 @@ const Contacts = () => {
   };
 
   const handleFormSubmit = async () => {
-    const contactData = { ...formData };
-    if (selectedContact) {
-      const contactRef = ref(database, `contacts/${selectedContact.id}`);
-      await update(contactRef, contactData);
-    } else {
-      const newContactId = uuidv4();
-      const newContactRef = ref(database, `contacts/${newContactId}`);
-      await set(newContactRef, contactData);
+    try {
+      const contactData = {
+        ...formData,
+        id: selectedContact ? selectedContact.id : uuidv4(),
+      };
+
+      const contactRef = ref(database, `contacts/${contactData.id}`);
+      if (selectedContact) {
+        await update(contactRef, contactData);
+        setContacts((prevContacts) =>
+          prevContacts.map((c) => (c.id === contactData.id ? contactData : c))
+        );
+      } else {
+        await set(contactRef, contactData);
+        setContacts((prevContacts) => [...prevContacts, contactData]);
+      }
+      handleDialogClose();
+    } catch (error) {
+      console.error("Error submitting form:", error);
     }
-    handleDialogClose();
   };
 
   return (
@@ -181,6 +208,7 @@ const Contacts = () => {
           rows={contacts}
           columns={columns}
           components={{ Toolbar: GridToolbar }}
+          getRowId={(row) => row.id}
         />
       </Box>
 
