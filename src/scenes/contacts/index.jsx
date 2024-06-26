@@ -1,76 +1,187 @@
-import { Box } from "@mui/material";
+import {
+  Box,
+  Button,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  TextField,
+  useTheme,
+} from "@mui/material";
 import { DataGrid, GridToolbar } from "@mui/x-data-grid";
 import { tokens } from "../../theme";
-import { mockDataContacts } from "../../data/mockData";
 import Header from "../../components/Header";
-import { useTheme } from "@mui/material";
+import { useEffect, useState } from "react";
+import { getDatabase, ref, set, update, remove, get } from "firebase/database";
+import { database } from "../../firebase";
+import { v4 as uuidv4 } from "uuid";
 
 const Contacts = () => {
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
+  const [contacts, setContacts] = useState([]);
+  const [openDialog, setOpenDialog] = useState(false);
+  const [selectedContact, setSelectedContact] = useState(null);
+  const [formData, setFormData] = useState({
+    registrarId: "",
+    name: "",
+    age: "",
+    phone: "",
+    email: "",
+    address: "",
+    city: "",
+    zipCode: "",
+  });
 
   const columns = [
     { field: "id", headerName: "ID", flex: 0.5 },
     { field: "registrarId", headerName: "Registrar ID" },
+    { field: "name", headerName: "Name", flex: 1 },
+    { field: "age", headerName: "Age", type: "number" },
+    { field: "phone", headerName: "Phone Number", flex: 1 },
+    { field: "email", headerName: "Email", flex: 1 },
+    { field: "address", headerName: "Address", flex: 1 },
+    { field: "city", headerName: "City", flex: 1 },
+    { field: "zipCode", headerName: "Zip Code", flex: 1 },
     {
-      field: "name",
-      headerName: "Name",
+      field: "actions",
+      headerName: "Actions",
       flex: 1,
-      cellClassName: "name-column--cell",
+      renderCell: ({ row }) => (
+        <Button
+          onClick={() => handleEditContact(row)}
+          sx={{ color: colors.grey[100] }}
+        >
+          Edit
+        </Button>
+      ),
     },
     {
-      field: "age",
-      headerName: "Age",
-      type: "number",
-      headerAlign: "left",
-      align: "left",
-    },
-    {
-      field: "phone",
-      headerName: "Phone Number",
+      field: "delete",
+      headerName: "Delete",
       flex: 1,
-    },
-    {
-      field: "email",
-      headerName: "Email",
-      flex: 1,
-    },
-    {
-      field: "address",
-      headerName: "Address",
-      flex: 1,
-    },
-    {
-      field: "city",
-      headerName: "City",
-      flex: 1,
-    },
-    {
-      field: "zipCode",
-      headerName: "Zip Code",
-      flex: 1,
+      renderCell: ({ row }) => (
+        <Button
+          onClick={() => handleDeleteContact(row)}
+          sx={{ color: colors.grey[100] }}
+        >
+          Delete
+        </Button>
+      ),
     },
   ];
 
+  useEffect(() => {
+    const fetchContacts = async () => {
+      try {
+        const contactsRef = ref(database, "contacts");
+        const snapshot = await get(contactsRef);
+        if (snapshot.exists()) {
+          const data = snapshot.val();
+          const contactsArray = Object.keys(data).map((key) => ({
+            id: key,
+            ...data[key],
+          }));
+          setContacts(contactsArray);
+        } else {
+          setContacts([]);
+        }
+      } catch (error) {
+        console.error("Error fetching contacts:", error);
+      }
+    };
+    fetchContacts();
+  }, []);
+
+  const handleAddContact = () => {
+    setFormData({
+      registrarId: "",
+      name: "",
+      age: "",
+      phone: "",
+      email: "",
+      address: "",
+      city: "",
+      zipCode: "",
+    });
+    setSelectedContact(null);
+    setOpenDialog(true);
+  };
+
+  const handleEditContact = (contact) => {
+    setSelectedContact(contact);
+    setFormData({ ...contact });
+    setOpenDialog(true);
+  };
+
+  const handleDeleteContact = async (contact) => {
+    try {
+      const contactRef = ref(database, `contacts/${contact.id}`);
+      await remove(contactRef);
+      setContacts((prevContacts) =>
+        prevContacts.filter((c) => c.id !== contact.id)
+      );
+    } catch (error) {
+      console.error("Error deleting contact:", error);
+    }
+  };
+
+  const handleDialogClose = () => {
+    setOpenDialog(false);
+    setSelectedContact(null);
+    setFormData({
+      registrarId: "",
+      name: "",
+      age: "",
+      phone: "",
+      email: "",
+      address: "",
+      city: "",
+      zipCode: "",
+    });
+  };
+
+  const handleFormSubmit = async () => {
+    try {
+      const contactData = {
+        ...formData,
+        id: selectedContact ? selectedContact.id : uuidv4(),
+      };
+
+      const contactRef = ref(database, `contacts/${contactData.id}`);
+      if (selectedContact) {
+        await update(contactRef, contactData);
+        setContacts((prevContacts) =>
+          prevContacts.map((c) => (c.id === contactData.id ? contactData : c))
+        );
+      } else {
+        await set(contactRef, contactData);
+        setContacts((prevContacts) => [...prevContacts, contactData]);
+      }
+      handleDialogClose();
+    } catch (error) {
+      console.error("Error submitting form:", error);
+    }
+  };
+
   return (
     <Box m="20px">
-      <Header
-        title="CONTACTS"
-        subtitle="List of Contacts for Future Reference"
-      />
+      <Header title="TEAM INFO" subtitle="List of Team's Information" />
+      <Button
+        onClick={handleAddContact}
+        variant="contained"
+        color="primary"
+        sx={{ marginBottom: "20px" }}
+      >
+        Add Contact
+      </Button>
       <Box
         m="40px 0 0 0"
         height="75vh"
         sx={{
-          "& .MuiDataGrid-root": {
-            border: "none",
-          },
-          "& .MuiDataGrid-cell": {
-            borderBottom: "none",
-          },
-          "& .name-column--cell": {
-            color: colors.greenAccent[300],
-          },
+          "& .MuiDataGrid-root": { border: "none" },
+          "& .MuiDataGrid-cell": { borderBottom: "none" },
+          "& .name-column--cell": { color: colors.greenAccent[300] },
           "& .MuiDataGrid-columnHeaders": {
             backgroundColor: colors.blueAccent[700],
             borderBottom: "none",
@@ -91,11 +202,169 @@ const Contacts = () => {
         }}
       >
         <DataGrid
-          rows={mockDataContacts}
+          rows={contacts}
           columns={columns}
           components={{ Toolbar: GridToolbar }}
+          getRowId={(row) => row.id}
         />
       </Box>
+
+      <Dialog open={openDialog} onClose={handleDialogClose}>
+        <DialogTitle sx={{ backgroundColor: "#000000" }}>
+          {selectedContact ? "Edit Contact" : "Add Contact"}
+        </DialogTitle>
+        <DialogContent sx={{ backgroundColor: "#000000" }}>
+          <TextField
+            margin="dense"
+            label="Registrar ID"
+            fullWidth
+            variant="outlined"
+            value={formData.registrarId}
+            onChange={(e) =>
+              setFormData({ ...formData, registrarId: e.target.value })
+            }
+            sx={{
+              marginBottom: "10px",
+              boxShadow:
+              "0px 2px 3px -1px rgba(0,0,0,0.1), 0px 1px 0px 0px rgba(25,28,33,0.02), 0px 0px 0px 1px rgba(25,28,33,0.08)",
+              "&:hover": {
+                boxShadow: "0px 0px 8px 2px rgba(33,150,243,0.5)",
+              },
+            }}
+          />
+          <TextField
+            margin="dense"
+            label="Name"
+            fullWidth
+            variant="outlined"
+            value={formData.name}
+            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+            sx={{
+              marginBottom: "10px",
+              boxShadow:
+              "0px 2px 3px -1px rgba(0,0,0,0.1), 0px 1px 0px 0px rgba(25,28,33,0.02), 0px 0px 0px 1px rgba(25,28,33,0.08)",
+              "&:hover": {
+                boxShadow: "0px 0px 8px 2px rgba(33,150,243,0.5)",
+              },
+            }}
+          />
+          <TextField
+            margin="dense"
+            label="Age"
+            type="number"
+            fullWidth
+            variant="outlined"
+            value={formData.age}
+            onChange={(e) => setFormData({ ...formData, age: e.target.value })}
+            sx={{
+              marginBottom: "10px",
+              boxShadow:
+              "0px 2px 3px -1px rgba(0,0,0,0.1), 0px 1px 0px 0px rgba(25,28,33,0.02), 0px 0px 0px 1px rgba(25,28,33,0.08)",
+              "&:hover": {
+                boxShadow: "0px 0px 8px 2px rgba(33,150,243,0.5)",
+              },
+            }}
+          />
+          <TextField
+            margin="dense"
+            label="Phone Number"
+            fullWidth
+            variant="outlined"
+            value={formData.phone}
+            onChange={(e) =>
+              setFormData({ ...formData, phone: e.target.value })
+            }
+            sx={{
+              marginBottom: "10px",
+              boxShadow:
+              "0px 2px 3px -1px rgba(0,0,0,0.1), 0px 1px 0px 0px rgba(25,28,33,0.02), 0px 0px 0px 1px rgba(25,28,33,0.08)",
+              "&:hover": {
+                boxShadow: "0px 0px 8px 2px rgba(33,150,243,0.5)",
+              },
+            }}
+          />
+          <TextField
+            margin="dense"
+            label="Email"
+            fullWidth
+            variant="outlined"
+            value={formData.email}
+            onChange={(e) =>
+              setFormData({ ...formData, email: e.target.value })
+            }
+            sx={{
+              marginBottom: "10px",
+              boxShadow:
+              "0px 2px 3px -1px rgba(0,0,0,0.1), 0px 1px 0px 0px rgba(25,28,33,0.02), 0px 0px 0px 1px rgba(25,28,33,0.08)",
+              "&:hover": {
+                boxShadow: "0px 0px 8px 2px rgba(33,150,243,0.5)",
+              },
+            }}
+          />
+          <TextField
+            margin="dense"
+            label="Address"
+            fullWidth
+            variant="outlined"
+            value={formData.address}
+            onChange={(e) =>
+              setFormData({ ...formData, address: e.target.value })
+            }
+            sx={{
+              marginBottom: "10px",
+              boxShadow:
+              "0px 2px 3px -1px rgba(0,0,0,0.1), 0px 1px 0px 0px rgba(25,28,33,0.02), 0px 0px 0px 1px rgba(25,28,33,0.08)",
+              "&:hover": {
+                boxShadow: "0px 0px 8px 2px rgba(33,150,243,0.5)",
+              },
+            }}
+          />
+          <TextField
+            margin="dense"
+            label="City"
+            fullWidth
+            variant="outlined"
+            value={formData.city}
+            onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+            sx={{
+              marginBottom: "10px",
+              boxShadow:
+              "0px 2px 3px -1px rgba(0,0,0,0.1), 0px 1px 0px 0px rgba(25,28,33,0.02), 0px 0px 0px 1px rgba(25,28,33,0.08)",
+              "&:hover": {
+                boxShadow: "0px 0px 8px 2px rgba(33,150,243,0.5)",
+              },
+            }}
+          />
+          <TextField
+            margin="dense"
+            label="Zip Code"
+            fullWidth
+            variant="outlined"
+            value={formData.zipCode}
+            onChange={(e) =>
+              setFormData({ ...formData, zipCode: e.target.value })
+            }
+            sx={{
+              marginBottom: "10px",
+              boxShadow:
+              "0px 2px 3px -1px rgba(0,0,0,0.1), 0px 1px 0px 0px rgba(25,28,33,0.02), 0px 0px 0px 1px rgba(25,28,33,0.08)",
+              "&:hover": {
+                boxShadow: "0px 0px 8px 2px rgba(33,150,243,0.5)",
+              },
+            }}
+          />
+
+          
+        </DialogContent>
+        <DialogActions sx={{ backgroundColor: "#000000" }}>
+          <Button onClick={handleDialogClose} color="secondary">
+            Cancel
+          </Button>
+          <Button onClick={handleFormSubmit} color="info">
+            {selectedContact ? "Save" : "Add"}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };
