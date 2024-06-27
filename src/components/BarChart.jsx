@@ -7,7 +7,7 @@ import { auth } from '../firebase';
 
 const fetchData = async () => {
   if (!auth.currentUser) {
-    console.error("User is not authenticated");
+    // console.error("User is not authenticated");
     return { salesPerUnit: [], uniqueSellingProducts: [] };
   }
   const db = getDatabase();
@@ -48,9 +48,9 @@ const transformData = (salesPerUnit, uniqueSellingProducts) => {
       [`${product}Color`]: productColors[product] || productColors['Unknown Product'],
     };
   });
-  console.log('Sales Per Unit:', salesPerUnit);
-  console.log('Unique Selling Products:', uniqueSellingProducts);
-  console.log('Transformed Data:', data);
+  // console.log('Sales Per Unit:', salesPerUnit);
+  // console.log('Unique Selling Products:', uniqueSellingProducts);
+  // console.log('Transformed Data:', data);
   return data;
 };
 
