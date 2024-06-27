@@ -1,8 +1,7 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Box, Button, TextField, Typography, useTheme } from "@mui/material";
 import { tokens } from "../../theme";
-import { Link } from "react-router-dom";
 import { auth, database } from "../../firebase"; // Import Firebase services
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { ref, get, set, push } from "firebase/database"; // Import necessary database functions
@@ -14,14 +13,6 @@ const Login = ({ handleLoginSuccess }) => {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const navigate = useNavigate();
-
-  // useEffect(() => {
-  //   // Check if user is already logged in
-  //   const storedUser = JSON.parse(localStorage.getItem("user"));
-  //   if (storedUser) {
-  //     navigate("/dashboard");
-  //   }
-  // }, [navigate]);
 
   const handleLogin = async () => {
     try {
@@ -72,29 +63,56 @@ const Login = ({ handleLoginSuccess }) => {
     }
   };
 
+  const lampEffectStyle = {
+    position: "relative",
+    background: "black",
+    boxShadow:
+        "0 0 10px rgba(0, 191, 255, 0.8), 0 0 20px rgba(0, 191, 255, 0.8), 0 0 30px rgba(0, 191, 255, 0.8)",
+    "&::after": {
+      content: '""',
+      position: "absolute",
+      left: 0,
+      width: "100%",
+      boxShadow:
+        "0 0 10px rgba(0, 191, 255, 0.8), 0 0 20px rgba(0, 191, 255, 0.8), 0 0 30px rgba(0, 191, 255, 0.8)",
+    },
+  };
+
   return (
     <Box
-      display="flex"
-      flexDirection="column"
-      alignItems="center"
-      justifyContent="center"
-      minHeight="100vh"
       sx={{
-        bgcolor: 'background.default',
-        '@media (prefers-color-scheme: dark)': {
-          bgcolor: '#18181b',
-        },
+        bgcolor: "background.default",
+        // "@media (prefers-color-scheme: dark)": {
+        //   bgcolor: '#18181b',
+        // },
+        ...lampEffectStyle,
+        padding: "20px",
+        boxShadow:
+        "0 0 10px rgba(0, 191, 255, 0.8), 0 0 20px rgba(0, 191, 255, 0.8), 0 0 30px rgba(0, 191, 255, 0.8)",
+        maxWidth: "500px",
+        margin: "auto",
+        display: "flex",
+        flexDirection: "column",
+        mt: "30vh",
       }}
     >
-      <Typography variant="h4" color={colors.grey[100]} mb="20px">
-        Login
+      <Typography variant="h4" color={colors.grey[100]} mb="40px">
+        Enter credentials to Login
       </Typography>
       <TextField
         label="Email"
         variant="outlined"
         value={email}
         onChange={(e) => setEmail(e.target.value)}
-        sx={{ marginBottom: "20px", input: { color: colors.grey[100] } }}
+        sx={{
+          marginBottom: "40px",
+          input: { color: colors.grey[100] },
+          boxShadow:
+            "0px 2px 3px -1px rgba(0,0,0,0.1), 0px 1px 0px 0px rgba(25,28,33,0.02), 0px 0px 0px 1px rgba(25,28,33,0.08)",
+          "&:hover": {
+            boxShadow: "0px 0px 8px 2px rgba(33,150,243,0.5)",
+          },
+        }}
         InputLabelProps={{ style: { color: colors.grey[100] } }}
       />
       <TextField
@@ -103,7 +121,15 @@ const Login = ({ handleLoginSuccess }) => {
         variant="outlined"
         value={password}
         onChange={(e) => setPassword(e.target.value)}
-        sx={{ marginBottom: "20px", input: { color: colors.grey[100] } }}
+        sx={{
+          marginBottom: "40px",
+          input: { color: colors.grey[100] },
+          boxShadow:
+            "0px 2px 3px -1px rgba(0,0,0,0.1), 0px 1px 0px 0px rgba(25,28,33,0.02), 0px 0px 0px 1px rgba(25,28,33,0.08)",
+          "&:hover": {
+            boxShadow: "0px 0px 8px 2px rgba(33,150,243,0.5)",
+          },
+        }}
         InputLabelProps={{ style: { color: colors.grey[100] } }}
       />
       {error && (
@@ -120,9 +146,27 @@ const Login = ({ handleLoginSuccess }) => {
           fontWeight: "bold",
           padding: "10px 20px",
           marginBottom: "20px",
+          borderRadius: "8px",
+          border: `2px solid ${colors.tealAccent[600]}`,
+          boxShadow: `0 0 10px ${colors.tealAccent[600]}`,
+          background: "linear-gradient(110deg,#000103 45%,#1e2631 55%,#000103)",
+          backgroundSize: "200% 100%",
+          animation: "shimmer 6s infinite",
+          transition: "color 0.3s",
+          "&:hover": {
+            color: "#FFFFFF",
+          },
+          "&:focus": {
+            outline: "none",
+            boxShadow: "0 0 0 4px rgba(148, 163, 184, 0.6)",
+          },
+          "@keyframes shimmer": {
+            "0%": { backgroundPosition: "200% 0" },
+            "100%": { backgroundPosition: "-200% 0" },
+          },
         }}
       >
-        Login
+        LOGIN
       </Button>
     </Box>
   );
