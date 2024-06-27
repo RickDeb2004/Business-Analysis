@@ -67,7 +67,7 @@ const Sidebar = () => {
     <Box
       sx={{
         "& .pro-sidebar-inner": {
-          background:  "#18181b",
+          background: "#18181b",
         },
         "& .pro-icon-wrapper": {
           backgroundColor: "transparent !important",
@@ -81,7 +81,6 @@ const Sidebar = () => {
         "& .pro-menu-item.active": {
           color: "#6870fa !important",
         },
-       
       }}
     >
       <ProSidebar collapsed={isCollapsed}>
@@ -195,13 +194,6 @@ const Sidebar = () => {
               title="Calendar"
               to="/calendar"
               icon={<CalendarTodayOutlinedIcon />}
-              selected={selected}
-              setSelected={setSelected}
-            />
-            <Item
-              title="FAQ Page"
-              to="/faq"
-              icon={<HelpOutlineOutlinedIcon />}
               selected={selected}
               setSelected={setSelected}
             />
