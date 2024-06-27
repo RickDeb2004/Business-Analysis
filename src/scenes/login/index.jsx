@@ -41,12 +41,22 @@ const Login = ({ handleLoginSuccess }) => {
         if (role === "user" || role === "admin") {
           const activityRef = ref(database, `${role}Activity`);
           const newActivityRef = push(activityRef);
+          const now = new Date();
+          const hours = now.getHours().toString().padStart(2, "0");
+          const minutes = now.getMinutes().toString().padStart(2, "0");
+          const time = `${hours}:${minutes}`;
+          const day = now.getDate().toString().padStart(2, "0");
+          const month = (now.getMonth() + 1).toString().padStart(2, "0");
+          const year = now.getFullYear().toString().slice(-2);
+          const date = `${day}/${month}/${year}`;
+          const formattedTime = `${time} - ${date}`;
+          // console.log(formattedTime)
           await set(newActivityRef, {
             uid: user.uid,
             name: userName,
             email: user.email,
             role: role,
-            signInTime: new Date().toISOString(),
+            signInTime: formattedTime, 
           });
         }
 
@@ -54,7 +64,7 @@ const Login = ({ handleLoginSuccess }) => {
         localStorage.setItem("user", JSON.stringify({ uid: user.uid, role }));
 
         handleLoginSuccess(role);
-        navigate("/dashboard");
+        // navigate("/dashboard");
       } else {
         setError("Invalid credentials");
       }
@@ -67,7 +77,7 @@ const Login = ({ handleLoginSuccess }) => {
     position: "relative",
     background: "black",
     boxShadow:
-        "0 0 10px rgba(0, 191, 255, 0.8), 0 0 20px rgba(0, 191, 255, 0.8), 0 0 30px rgba(0, 191, 255, 0.8)",
+      "0 0 10px rgba(0, 191, 255, 0.8), 0 0 20px rgba(0, 191, 255, 0.8), 0 0 30px rgba(0, 191, 255, 0.8)",
     "&::after": {
       content: '""',
       position: "absolute",
@@ -88,7 +98,7 @@ const Login = ({ handleLoginSuccess }) => {
         ...lampEffectStyle,
         padding: "20px",
         boxShadow:
-        "0 0 10px rgba(0, 191, 255, 0.8), 0 0 20px rgba(0, 191, 255, 0.8), 0 0 30px rgba(0, 191, 255, 0.8)",
+          "0 0 10px rgba(0, 191, 255, 0.8), 0 0 20px rgba(0, 191, 255, 0.8), 0 0 30px rgba(0, 191, 255, 0.8)",
         maxWidth: "500px",
         margin: "auto",
         display: "flex",

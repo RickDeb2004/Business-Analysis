@@ -4,7 +4,6 @@ import Topbar from "./scenes/global/Topbar";
 import Sidebar from "./scenes/global/Sidebar";
 import Dashboard from "./scenes/dashboard";
 import Team from "./scenes/team";
-import Invoices from "./scenes/invoices";
 import Contacts from "./scenes/contacts";
 import Bar from "./scenes/bar";
 import Form from "./scenes/form";
@@ -21,46 +20,50 @@ import Feedback from "./scenes/feedback";
 
 function App() {
   const [theme, colorMode] = useMode();
-  const [isSidebar, setIsSidebar] = useState(true);
+  const [isSidebarVisible, setSidebarVisible] = useState(false);
+  const [isLoggedIn, setLoggedIn] = useState(false);
+  const [userRole, setUserRole] = useState(null);
+
   const navigate = useNavigate();
   const location = useLocation();
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   useEffect(() => {
     const storedUser = JSON.parse(localStorage.getItem("user"));
     if (storedUser) {
-      setIsLoggedIn(true);
-      navigate("/dashboard");
+      setLoggedIn(true);
+      setUserRole(storedUser.role);
+      setSidebarVisible(storedUser.role === "admin");
+      (storedUser.role === "superadmin") ? navigate("/admins") : navigate("/dashboard");
     }
   }, []);
 
   const handleLoginSuccess = (role) => {
-    setIsLoggedIn(true);
-    if (role === "user" || role === "superadmin") {
-      setIsSidebar(false);
-      navigate("/admins");
-    } else {
-      setIsSidebar(false);
-      navigate("/dashboard");
-    }
+    setLoggedIn(true);
+    setUserRole(role);
+    setSidebarVisible(role === "admin");
+    navigate(role === "superadmin" ? "/admins" : "/dashboard");
   };
 
-  const showSidebarAndTopbar = isLoggedIn && location.pathname !== "/";
+  const handleLogout = () => {
+    setLoggedIn(false);
+    setUserRole(null);
+    setSidebarVisible(false);
+    navigate("/");
+  };
+
+  const showTopbar = isLoggedIn && location.pathname !== "/";
 
   return (
     <ColorModeContext.Provider value={colorMode}>
       <ThemeProvider theme={theme}>
         <CssBaseline />
         <div className="app">
-          {showSidebarAndTopbar && <Sidebar isSidebar={isSidebar} />}
+          {isSidebarVisible && <Sidebar />}
           <main className="content">
-            {showSidebarAndTopbar && <Topbar setIsSidebar={setIsSidebar} />}
+            {showTopbar && <Topbar handleLogout={handleLogout} />}
             <Routes>
-              <Route
-                path="/"
-                element={<Login handleLoginSuccess={handleLoginSuccess} />}
-              />
-              <Route path="/admins" element={<AdminList isSidebar={false} />} />
+              <Route path="/" element={<Login handleLoginSuccess={handleLoginSuccess} />} />
+              <Route path="/admins" element={<AdminList />} />
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/team" element={<Team />} />
               <Route path="/contacts" element={<Contacts />} />
