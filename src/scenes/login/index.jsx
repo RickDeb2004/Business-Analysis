@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Box, Button, TextField, Typography, useTheme } from "@mui/material";
 import { tokens } from "../../theme";
 import { Link } from "react-router-dom";
@@ -12,6 +13,15 @@ const Login = ({ handleLoginSuccess }) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const navigate = useNavigate();
+
+  // useEffect(() => {
+  //   // Check if user is already logged in
+  //   const storedUser = JSON.parse(localStorage.getItem("user"));
+  //   if (storedUser) {
+  //     navigate("/dashboard");
+  //   }
+  // }, [navigate]);
 
   const handleLogin = async () => {
     try {
@@ -49,7 +59,11 @@ const Login = ({ handleLoginSuccess }) => {
           });
         }
 
+        // Store user information in localStorage
+        localStorage.setItem("user", JSON.stringify({ uid: user.uid, role }));
+
         handleLoginSuccess(role);
+        navigate("/dashboard");
       } else {
         setError("Invalid credentials");
       }
@@ -67,8 +81,6 @@ const Login = ({ handleLoginSuccess }) => {
       minHeight="100vh"
       sx={{
         bgcolor: 'background.default',
-       
-        
         '@media (prefers-color-scheme: dark)': {
           bgcolor: '#18181b',
         },
@@ -112,12 +124,6 @@ const Login = ({ handleLoginSuccess }) => {
       >
         Login
       </Button>
-      <Typography variant="body1" color={colors.grey[100]}>
-        Don't have an account?{" "}
-        <Link to="/signup" style={{ color: colors.grey[100] }}>
-          Create one
-        </Link>
-      </Typography>
     </Box>
   );
 };
