@@ -7,15 +7,17 @@ import { auth } from "../../firebase"; // Import Firebase auth
 import { signOut } from "firebase/auth";
 import { useEffect } from "react";
 
-const Topbar = () => {
+const Topbar = ({ handleLogout }) => {
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
   const navigate = useNavigate();
 
-  const handleLogout = async () => {
+  const handleLogoutdb = async () => {
     try {
       await signOut(auth); // Sign out from Firebase
-      localStorage.removeItem("user"); // Remove user information from localStorage
+      localStorage.removeItem("user"); // Remove user information from localStorage4
+      handleLogout(); // Call the parent function to update the state
+      console.log(localStorage.getItem("user"));
       navigate("/"); // Redirect to login page
     } catch (error) {
       console.error("Error logging out:", error);
@@ -28,7 +30,7 @@ const Topbar = () => {
     if (!storedUser) {
       navigate("/");
     }
-  }, [navigate]);
+  }, []);
 
   return (
     <Box display="flex" justifyContent="space-between" p={2}>
@@ -47,7 +49,7 @@ const Topbar = () => {
       {/* ICONS */}
       <Box display="flex">
         <Button
-          onClick={handleLogout}
+          onClick={handleLogoutdb}
           variant="contained"
           color="primary"
           sx={{

@@ -20,7 +20,7 @@ import LockOpenOutlinedIcon from "@mui/icons-material/LockOpenOutlined";
 import SecurityOutlinedIcon from "@mui/icons-material/SecurityOutlined";
 import Header from "../../components/Header";
 import { useEffect, useState } from "react";
-import { database } from "../../firebase";
+import { auth, database } from "../../firebase";
 import {
   off,
   onChildAdded,
@@ -28,7 +28,6 @@ import {
   onChildRemoved,
   ref,
   get,
-  remove,
   update,
   set,
 } from "firebase/database";
@@ -46,6 +45,24 @@ const Team = () => {
     password: "",
     role: "user",
   });
+  const [currentUserRole, setCurrentUserRole] = useState(null);
+
+  const user = auth.currentUser;
+
+  // fetch userRole from the database
+  useEffect(() => {
+    if (user) {
+      const userRoleRef = ref(database, "users/" + user.uid + "/role");
+      const getUserRole = async () => {
+        const snapshot = await get(userRoleRef);
+        if (snapshot.exists()) {
+          setCurrentUserRole(snapshot.val());
+          console.log(snapshot.val());
+        }
+      };
+      getUserRole();
+    }
+  }, [user]);
 
   const columns = [
     { field: "id", headerName: "UID", flex: 1 },
@@ -94,7 +111,10 @@ const Team = () => {
       headerName: "Password",
       flex: 1,
     },
-    {
+  ];
+
+  if (currentUserRole === "admin") {
+    columns.push({
       field: "blocked",
       headerName: "Blocked",
       flex: 1,
@@ -106,8 +126,8 @@ const Team = () => {
           {row.blocked ? "Unblock" : "Block"}
         </Button>
       ),
-    },
-    {
+    });
+    columns.push({
       field: "actions",
       headerName: "Actions",
       flex: 1,
@@ -119,8 +139,8 @@ const Team = () => {
           Edit
         </Button>
       ),
-    },
-  ];
+    });
+  }
 
   useEffect(() => {
     const userActivityRef = ref(database, "userActivity");
@@ -167,34 +187,6 @@ const Team = () => {
     };
   }, []);
 
-  useEffect(() => {
-    const cleanupOldActivities = async () => {
-      const userActivityRef = ref(database, "userActivity");
-      const snapshot = await get(userActivityRef);
-
-      if (snapshot.exists()) {
-        const data = snapshot.val();
-        const now = new Date().getTime();
-        const oneDay = 24 * 60 * 60 * 1000;
-
-        for (let key in data) {
-          const activity = data[key];
-          const signInTime = new Date(activity.signInTime).getTime();
-
-          if (now - signInTime > oneDay) {
-            const activityRef = ref(database, `userActivity/${key}`);
-            await remove(activityRef);
-          }
-        }
-      }
-    };
-
-    cleanupOldActivities();
-    const interval = setInterval(cleanupOldActivities, 24 * 60 * 60 * 1000);
-
-    return () => clearInterval(interval);
-  }, []);
-
   const handleBlockUser = async (userId, blockStatus) => {
     const userRef = ref(database, `userActivity/${userId}`);
     await update(userRef, { blocked: blockStatus });
@@ -238,43 +230,45 @@ const Team = () => {
   return (
     <Box m="20px">
       <Header title="TEAM" subtitle="Managing the Team Members" />
-      <Box display="flex" justifyContent="flex-start" mb="20px">
-        <Button
-          onClick={() => setOpenDialog(true)}
-          variant="contained"
-          color="primary"
-          sx={{
-            display: "inline-flex",
-            height: "48px",
-            alignItems: "center",
-            justifyContent: "center",
-            borderRadius: "8px",
-            border: "1px solid #374151",
-            background:
-              "linear-gradient(110deg,#000103 45%,#1e2631 55%,#000103)",
-            backgroundSize: "200% 100%",
-            px: 6,
-            color: "#9CA3AF",
-            fontWeight: "500",
-            textTransform: "none",
-            animation: "shimmer 2s infinite",
-            transition: "color 0.3s",
-            "&:hover": {
-              color: "#FFFFFF",
-            },
-            "&:focus": {
-              outline: "none",
-              boxShadow: "0 0 0 4px rgba(148, 163, 184, 0.6)",
-            },
-            "@keyframes shimmer": {
-              "0%": { backgroundPosition: "200% 0" },
-              "100%": { backgroundPosition: "-200% 0" },
-            },
-          }}
-        >
-          Add User
-        </Button>
-      </Box>
+      {currentUserRole === "admin" && (
+        <Box display="flex" justifyContent="flex-start" mb="20px">
+          <Button
+            onClick={() => setOpenDialog(true)}
+            variant="contained"
+            color="primary"
+            sx={{
+              display: "inline-flex",
+              height: "48px",
+              alignItems: "center",
+              justifyContent: "center",
+              borderRadius: "8px",
+              border: "1px solid #374151",
+              background:
+                "linear-gradient(110deg,#000103 45%,#1e2631 55%,#000103)",
+              backgroundSize: "200% 100%",
+              px: 6,
+              color: "#9CA3AF",
+              fontWeight: "500",
+              textTransform: "none",
+              animation: "shimmer 2s infinite",
+              transition: "color 0.3s",
+              "&:hover": {
+                color: "#FFFFFF",
+              },
+              "&:focus": {
+                outline: "none",
+                boxShadow: "0 0 0 4px rgba(148, 163, 184, 0.6)",
+              },
+              "@keyframes shimmer": {
+                "0%": { backgroundPosition: "200% 0" },
+                "100%": { backgroundPosition: "-200% 0" },
+              },
+            }}
+          >
+            Add User
+          </Button>
+        </Box>
+      )}
 
       <Box
         m="40px 0 0 0"
