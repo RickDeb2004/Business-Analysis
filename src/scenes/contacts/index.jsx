@@ -15,7 +15,8 @@ import { useEffect, useState } from "react";
 import { getDatabase, ref, set, update, remove, get } from "firebase/database";
 import { database } from "../../firebase";
 import { v4 as uuidv4 } from "uuid";
-
+import { motion } from "framer-motion";
+import Delete from "@mui/icons-material/Delete";
 const Contacts = () => {
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
@@ -63,9 +64,9 @@ const Contacts = () => {
       renderCell: ({ row }) => (
         <Button
           onClick={() => handleDeleteContact(row)}
-          sx={{ color: colors.grey[100] }}
+          sx={{ color: colors.redAccent[400] }}
         >
-          Delete
+          <Delete />
         </Button>
       ),
     },
@@ -163,18 +164,65 @@ const Contacts = () => {
       console.error("Error submitting form:", error);
     }
   };
+  const lampEffectStyle = {
+    position: "relative",
+    background: "linear-gradient(to top, #00bfff, transparent)",
+    "&::after": {
+      content: '""',
+      position: "absolute",
+      left: 0,
+
+      width: "100%",
+
+      background:
+        "linear-gradient(to top, rgba(0, 191, 255, 0.8), transparent)",
+      boxShadow:
+        "0 0 10px rgba(0, 191, 255, 0.8), 0 0 20px rgba(0, 191, 255, 0.8), 0 0 30px rgba(0, 191, 255, 0.8)",
+    },
+  };
 
   return (
     <Box m="20px">
       <Header title="TEAM INFO" subtitle="List of Team's Information" />
-      <Button
-        onClick={handleAddContact}
-        variant="contained"
-        color="primary"
-        sx={{ marginBottom: "20px" }}
-      >
-        Add Contact
-      </Button>
+      <Box display="flex" justifyContent="flex-start" mb="20px">
+        <Button
+          onClick={() => setOpenDialog(true)}
+          variant="contained"
+          color="primary"
+          sx={{
+            display: "inline-flex",
+            height: "48px",
+            alignItems: "center",
+            justifyContent: "center",
+            borderRadius: "8px",
+
+            border: `2px solid ${colors.tealAccent[600]}`,
+            boxShadow: `0 0 10px ${colors.tealAccent[600]}`,
+            background:
+              "linear-gradient(110deg,#000103 45%,#1e2631 55%,#000103)",
+            backgroundSize: "200% 100%",
+            px: 6,
+            color: "#9CA3AF",
+            fontWeight: "500",
+            textTransform: "none",
+            animation: "shimmer 2s infinite",
+            transition: "color 0.3s",
+            "&:hover": {
+              color: "#FFFFFF",
+            },
+            "&:focus": {
+              outline: "none",
+              boxShadow: "0 0 0 4px rgba(148, 163, 184, 0.6)",
+            },
+            "@keyframes shimmer": {
+              "0%": { backgroundPosition: "200% 0" },
+              "100%": { backgroundPosition: "-200% 0" },
+            },
+          }}
+        >
+          Add Information
+        </Button>
+      </Box>
       <Box
         m="40px 0 0 0"
         height="75vh"
@@ -206,11 +254,40 @@ const Contacts = () => {
           columns={columns}
           components={{ Toolbar: GridToolbar }}
           getRowId={(row) => row.id}
+          sx={{
+            border: `20px solid ${colors.grey[600]}`,
+            boxShadow: `0 0 10px ${colors.grey[600]}`,
+          }}
         />
       </Box>
 
-      <Dialog open={openDialog} onClose={handleDialogClose}>
-        <DialogTitle sx={{ backgroundColor: "#000000" }}>
+      <Dialog
+        open={openDialog}
+        onClose={handleDialogClose}
+        sx={{
+          ...lampEffectStyle,
+          "& .MuiDialog-paper": {
+            border: "1px solid transparent",
+            position: "relative",
+            overflow: "hidden",
+            "&::before": {
+              content: '""',
+              position: "absolute",
+              top: 0,
+              left: 0,
+              width: "100%",
+              height: "10px",
+              background:
+                "linear-gradient(to top, rgba(0, 191, 255, 0.8), transparent)",
+              boxShadow:
+                "0 0 10px rgba(0, 191, 255, 0.8), 0 0 20px rgba(0, 191, 255, 0.8), 0 0 30px rgba(0, 191, 255, 0.8)",
+            },
+          },
+        }}
+      >
+        <DialogTitle
+          sx={{ backgroundColor: "#000000", color: colors.yellowAccent[600] }}
+        >
           {selectedContact ? "Edit Contact" : "Add Contact"}
         </DialogTitle>
         <DialogContent sx={{ backgroundColor: "#000000" }}>
@@ -226,7 +303,7 @@ const Contacts = () => {
             sx={{
               marginBottom: "10px",
               boxShadow:
-              "0px 2px 3px -1px rgba(0,0,0,0.1), 0px 1px 0px 0px rgba(25,28,33,0.02), 0px 0px 0px 1px rgba(25,28,33,0.08)",
+                "0px 2px 3px -1px rgba(0,0,0,0.1), 0px 1px 0px 0px rgba(25,28,33,0.02), 0px 0px 0px 1px rgba(25,28,33,0.08)",
               "&:hover": {
                 boxShadow: "0px 0px 8px 2px rgba(33,150,243,0.5)",
               },
@@ -242,7 +319,7 @@ const Contacts = () => {
             sx={{
               marginBottom: "10px",
               boxShadow:
-              "0px 2px 3px -1px rgba(0,0,0,0.1), 0px 1px 0px 0px rgba(25,28,33,0.02), 0px 0px 0px 1px rgba(25,28,33,0.08)",
+                "0px 2px 3px -1px rgba(0,0,0,0.1), 0px 1px 0px 0px rgba(25,28,33,0.02), 0px 0px 0px 1px rgba(25,28,33,0.08)",
               "&:hover": {
                 boxShadow: "0px 0px 8px 2px rgba(33,150,243,0.5)",
               },
@@ -259,7 +336,7 @@ const Contacts = () => {
             sx={{
               marginBottom: "10px",
               boxShadow:
-              "0px 2px 3px -1px rgba(0,0,0,0.1), 0px 1px 0px 0px rgba(25,28,33,0.02), 0px 0px 0px 1px rgba(25,28,33,0.08)",
+                "0px 2px 3px -1px rgba(0,0,0,0.1), 0px 1px 0px 0px rgba(25,28,33,0.02), 0px 0px 0px 1px rgba(25,28,33,0.08)",
               "&:hover": {
                 boxShadow: "0px 0px 8px 2px rgba(33,150,243,0.5)",
               },
@@ -277,7 +354,7 @@ const Contacts = () => {
             sx={{
               marginBottom: "10px",
               boxShadow:
-              "0px 2px 3px -1px rgba(0,0,0,0.1), 0px 1px 0px 0px rgba(25,28,33,0.02), 0px 0px 0px 1px rgba(25,28,33,0.08)",
+                "0px 2px 3px -1px rgba(0,0,0,0.1), 0px 1px 0px 0px rgba(25,28,33,0.02), 0px 0px 0px 1px rgba(25,28,33,0.08)",
               "&:hover": {
                 boxShadow: "0px 0px 8px 2px rgba(33,150,243,0.5)",
               },
@@ -295,7 +372,7 @@ const Contacts = () => {
             sx={{
               marginBottom: "10px",
               boxShadow:
-              "0px 2px 3px -1px rgba(0,0,0,0.1), 0px 1px 0px 0px rgba(25,28,33,0.02), 0px 0px 0px 1px rgba(25,28,33,0.08)",
+                "0px 2px 3px -1px rgba(0,0,0,0.1), 0px 1px 0px 0px rgba(25,28,33,0.02), 0px 0px 0px 1px rgba(25,28,33,0.08)",
               "&:hover": {
                 boxShadow: "0px 0px 8px 2px rgba(33,150,243,0.5)",
               },
@@ -313,7 +390,7 @@ const Contacts = () => {
             sx={{
               marginBottom: "10px",
               boxShadow:
-              "0px 2px 3px -1px rgba(0,0,0,0.1), 0px 1px 0px 0px rgba(25,28,33,0.02), 0px 0px 0px 1px rgba(25,28,33,0.08)",
+                "0px 2px 3px -1px rgba(0,0,0,0.1), 0px 1px 0px 0px rgba(25,28,33,0.02), 0px 0px 0px 1px rgba(25,28,33,0.08)",
               "&:hover": {
                 boxShadow: "0px 0px 8px 2px rgba(33,150,243,0.5)",
               },
@@ -329,7 +406,7 @@ const Contacts = () => {
             sx={{
               marginBottom: "10px",
               boxShadow:
-              "0px 2px 3px -1px rgba(0,0,0,0.1), 0px 1px 0px 0px rgba(25,28,33,0.02), 0px 0px 0px 1px rgba(25,28,33,0.08)",
+                "0px 2px 3px -1px rgba(0,0,0,0.1), 0px 1px 0px 0px rgba(25,28,33,0.02), 0px 0px 0px 1px rgba(25,28,33,0.08)",
               "&:hover": {
                 boxShadow: "0px 0px 8px 2px rgba(33,150,243,0.5)",
               },
@@ -347,14 +424,12 @@ const Contacts = () => {
             sx={{
               marginBottom: "10px",
               boxShadow:
-              "0px 2px 3px -1px rgba(0,0,0,0.1), 0px 1px 0px 0px rgba(25,28,33,0.02), 0px 0px 0px 1px rgba(25,28,33,0.08)",
+                "0px 2px 3px -1px rgba(0,0,0,0.1), 0px 1px 0px 0px rgba(25,28,33,0.02), 0px 0px 0px 1px rgba(25,28,33,0.08)",
               "&:hover": {
                 boxShadow: "0px 0px 8px 2px rgba(33,150,243,0.5)",
               },
             }}
           />
-
-          
         </DialogContent>
         <DialogActions sx={{ backgroundColor: "#000000" }}>
           <Button onClick={handleDialogClose} color="secondary">
