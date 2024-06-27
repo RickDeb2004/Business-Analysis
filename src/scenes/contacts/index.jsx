@@ -255,8 +255,8 @@ const Contacts = () => {
           components={{ Toolbar: GridToolbar }}
           getRowId={(row) => row.id}
           sx={{
-            border: `20px solid ${colors.grey[600]}`,
-            boxShadow: `0 0 10px ${colors.grey[600]}`,
+            border: `20px solid ${colors.tealAccent[600]}`,
+            boxShadow: `0 0 10px ${colors.tealAccent[600]}`,
           }}
         />
       </Box>
