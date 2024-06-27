@@ -13,7 +13,7 @@ import {
   Select,
   MenuItem,
 } from "@mui/material";
-import { DataGrid } from "@mui/x-data-grid";
+import { DataGrid, GridToolbar } from "@mui/x-data-grid";
 import { tokens } from "../../theme";
 import AdminPanelSettingsOutlinedIcon from "@mui/icons-material/AdminPanelSettingsOutlined";
 import LockOpenOutlinedIcon from "@mui/icons-material/LockOpenOutlined";
@@ -226,6 +226,22 @@ const Team = () => {
     }
     handleDialogClose();
   };
+  const lampEffectStyle = {
+    position: "relative",
+    background: "linear-gradient(to top, #00bfff, transparent)",
+    "&::after": {
+      content: '""',
+      position: "absolute",
+      left: 0,
+
+      width: "100%",
+
+      background:
+        "linear-gradient(to top, rgba(0, 191, 255, 0.8), transparent)",
+      boxShadow:
+        "0 0 10px rgba(0, 191, 255, 0.8), 0 0 20px rgba(0, 191, 255, 0.8), 0 0 30px rgba(0, 191, 255, 0.8)",
+    },
+  };
 
   return (
     <Box m="20px">
@@ -242,7 +258,9 @@ const Team = () => {
               alignItems: "center",
               justifyContent: "center",
               borderRadius: "8px",
-              border: "1px solid #374151",
+
+              border: `2px solid ${colors.tealAccent[600]}`,
+              boxShadow: `0 0 10px ${colors.tealAccent[600]}`,
               background:
                 "linear-gradient(110deg,#000103 45%,#1e2631 55%,#000103)",
               backgroundSize: "200% 100%",
@@ -265,7 +283,7 @@ const Team = () => {
               },
             }}
           >
-            Add User
+            Add Member
           </Button>
         </Box>
       )}
@@ -291,12 +309,16 @@ const Team = () => {
           "& .MuiCheckbox-root": {
             color: `${colors.greenAccent[200]} !important`,
           },
+          "& .MuiDataGrid-toolbarContainer .MuiButton-text": {
+            color: `${colors.grey[100]} !important`,
+          },
         }}
       >
         <DataGrid
           checkboxSelection
           rows={userData}
           columns={columns}
+          components={{ Toolbar: GridToolbar }}
           sx={{
             border: `5px solid ${colors.tealAccent[600]}`,
             boxShadow: `0 0 10px ${colors.tealAccent[600]}`,
@@ -306,9 +328,36 @@ const Team = () => {
           }}
         />
       </Box>
-      <Dialog open={openDialog} onClose={handleDialogClose}>
-        <DialogTitle>{selectedUser ? "Edit User" : "Add User"}</DialogTitle>
-        <DialogContent>
+      <Dialog
+        open={openDialog}
+        onClose={handleDialogClose}
+        sx={{
+          ...lampEffectStyle,
+          "& .MuiDialog-paper": {
+            border: "1px solid transparent",
+            position: "relative",
+            overflow: "hidden",
+            "&::before": {
+              content: '""',
+              position: "absolute",
+              top: 0,
+              left: 0,
+              width: "100%",
+              height: "10px",
+              background:
+                "linear-gradient(to top, rgba(0, 191, 255, 0.8), transparent)",
+              boxShadow:
+                "0 0 10px rgba(0, 191, 255, 0.8), 0 0 20px rgba(0, 191, 255, 0.8), 0 0 30px rgba(0, 191, 255, 0.8)",
+            },
+          },
+        }}
+      >
+        <DialogTitle
+          sx={{ backgroundColor: "#000000", color: colors.yellowAccent[600] }}
+        >
+          {selectedUser ? "Edit User" : "Add User"}
+        </DialogTitle>
+        <DialogContent sx={{ backgroundColor: "#000000" }}>
           <TextField
             margin="dense"
             label="Name"
@@ -316,6 +365,14 @@ const Team = () => {
             variant="outlined"
             value={formData.name}
             onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+            sx={{
+              marginBottom: "10px",
+              boxShadow:
+                "0px 2px 3px -1px rgba(0,0,0,0.1), 0px 1px 0px 0px rgba(25,28,33,0.02), 0px 0px 0px 1px rgba(25,28,33,0.08)",
+              "&:hover": {
+                boxShadow: "0px 0px 8px 2px rgba(33,150,243,0.5)",
+              },
+            }}
           />
           <TextField
             margin="dense"
@@ -326,6 +383,14 @@ const Team = () => {
             onChange={(e) =>
               setFormData({ ...formData, email: e.target.value })
             }
+            sx={{
+              marginBottom: "10px",
+              boxShadow:
+                "0px 2px 3px -1px rgba(0,0,0,0.1), 0px 1px 0px 0px rgba(25,28,33,0.02), 0px 0px 0px 1px rgba(25,28,33,0.08)",
+              "&:hover": {
+                boxShadow: "0px 0px 8px 2px rgba(33,150,243,0.5)",
+              },
+            }}
           />
           <TextField
             margin="dense"
@@ -337,6 +402,14 @@ const Team = () => {
             onChange={(e) =>
               setFormData({ ...formData, password: e.target.value })
             }
+            sx={{
+              marginBottom: "10px",
+              boxShadow:
+                "0px 2px 3px -1px rgba(0,0,0,0.1), 0px 1px 0px 0px rgba(25,28,33,0.02), 0px 0px 0px 1px rgba(25,28,33,0.08)",
+              "&:hover": {
+                boxShadow: "0px 0px 8px 2px rgba(33,150,243,0.5)",
+              },
+            }}
           />
           <FormControl fullWidth margin="dense">
             <InputLabel>Role</InputLabel>
@@ -347,16 +420,16 @@ const Team = () => {
               }
             >
               <MenuItem value="user">User</MenuItem>
-              <MenuItem value="admin">Admin</MenuItem>
+              <MenuItem value="admin">Developer</MenuItem>
               <MenuItem value="manager">Manager</MenuItem>
             </Select>
           </FormControl>
         </DialogContent>
-        <DialogActions>
-          <Button onClick={handleDialogClose} color="primary">
+        <DialogActions sx={{ backgroundColor: "#000000" }}>
+          <Button onClick={handleDialogClose} color="secondary">
             Cancel
           </Button>
-          <Button onClick={handleFormSubmit} color="primary">
+          <Button onClick={handleFormSubmit} color="info">
             {selectedUser ? "Save" : "Add"}
           </Button>
         </DialogActions>
