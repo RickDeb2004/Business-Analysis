@@ -1,10 +1,9 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { Box, Button, TextField, Typography, useTheme } from "@mui/material";
 import { tokens } from "../../theme";
 import { auth, database } from "../../firebase"; // Import Firebase services
 import { signInWithEmailAndPassword } from "firebase/auth";
-import { ref, get, set, push } from "firebase/database"; // Import necessary database functions
+import { ref, get, set, push, update } from "firebase/database"; // Import necessary database functions
 
 const Login = ({ handleLoginSuccess }) => {
   const theme = useTheme();
@@ -12,7 +11,6 @@ const Login = ({ handleLoginSuccess }) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
-  const navigate = useNavigate();
 
   const handleLogin = async () => {
     try {
@@ -38,9 +36,24 @@ const Login = ({ handleLoginSuccess }) => {
           : "Unknown User";
 
         // Record the sign-in activity
+        // Record the sign-in activity
         if (role === "user" || role === "admin") {
           const activityRef = ref(database, `${role}Activity`);
-          const newActivityRef = push(activityRef);
+
+          // Fetch existing activities
+          const existingActivitiesSnapshot = await get(activityRef);
+          let existingActivityKey = null;
+
+          if (existingActivitiesSnapshot.exists()) {
+            const activities = existingActivitiesSnapshot.val();
+            for (const [key, activity] of Object.entries(activities)) {
+              if (activity.email === user.email) {
+                existingActivityKey = key;
+                break;
+              }
+            }
+          }
+
           const now = new Date();
           const hours = now.getHours().toString().padStart(2, "0");
           const minutes = now.getMinutes().toString().padStart(2, "0");
@@ -50,14 +63,27 @@ const Login = ({ handleLoginSuccess }) => {
           const year = now.getFullYear().toString().slice(-2);
           const date = `${day}/${month}/${year}`;
           const formattedTime = `${time} - ${date}`;
-          // console.log(formattedTime)
-          await set(newActivityRef, {
-            uid: user.uid,
-            name: userName,
-            email: user.email,
-            role: role,
-            signInTime: formattedTime, 
-          });
+
+          if (existingActivityKey) {
+            // Update existing activity
+            const existingActivityRef = ref(
+              database,
+              `${role}Activity/${existingActivityKey}`
+            );
+            await update(existingActivityRef, {
+              signInTime: formattedTime,
+            });
+          } else {
+            // Push new activity
+            const newActivityRef = push(activityRef);
+            await set(newActivityRef, {
+              uid: user.uid,
+              name: userName,
+              email: user.email,
+              role: role,
+              signInTime: formattedTime,
+            });
+          }
         }
 
         // Store user information in localStorage
