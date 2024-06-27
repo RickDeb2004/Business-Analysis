@@ -16,6 +16,7 @@ import { getDatabase, ref, set, update, remove, get } from "firebase/database";
 import { database } from "../../firebase";
 import { v4 as uuidv4 } from "uuid";
 import { motion } from "framer-motion";
+import Delete from "@mui/icons-material/Delete";
 const Contacts = () => {
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
@@ -63,9 +64,9 @@ const Contacts = () => {
       renderCell: ({ row }) => (
         <Button
           onClick={() => handleDeleteContact(row)}
-          sx={{ color: colors.grey[100] }}
+          sx={{ color: colors.redAccent[400] }}
         >
-          Delete
+          <Delete />
         </Button>
       ),
     },
