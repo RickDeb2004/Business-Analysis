@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Routes, Route, useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { Routes, Route, useNavigate, useLocation } from "react-router-dom";
 import Topbar from "./scenes/global/Topbar";
 import Sidebar from "./scenes/global/Sidebar";
 import Dashboard from "./scenes/dashboard";
@@ -16,7 +16,6 @@ import { CssBaseline, ThemeProvider } from "@mui/material";
 import { ColorModeContext, useMode } from "./theme";
 import Calendar from "./scenes/calendar/calendar";
 import Login from "./scenes/login/index";
-import Signup from "./scenes/signup";
 import AdminList from "./scenes/AdminList";
 import Feedback from "./scenes/feedback";
 
@@ -24,7 +23,17 @@ function App() {
   const [theme, colorMode] = useMode();
   const [isSidebar, setIsSidebar] = useState(true);
   const navigate = useNavigate();
+  const location = useLocation();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  useEffect(() => {
+    const storedUser = JSON.parse(localStorage.getItem("user"));
+    if (storedUser) {
+      setIsLoggedIn(true);
+      navigate("/dashboard");
+    }
+  }, [navigate]);
+
   const handleLoginSuccess = (role) => {
     setIsLoggedIn(true);
     if (role === "user" || role === "superadmin") {
@@ -35,27 +44,21 @@ function App() {
       navigate("/dashboard");
     }
   };
-  const handleSignupSuccess = () => {
-    // Redirect to login after successful signup
-    navigate("/");
-  };
+
+  const showSidebarAndTopbar = isLoggedIn && location.pathname !== "/";
 
   return (
     <ColorModeContext.Provider value={colorMode}>
       <ThemeProvider theme={theme}>
         <CssBaseline />
         <div className="app">
-          {isLoggedIn && <Sidebar isSidebar={isSidebar} />}
+          {showSidebarAndTopbar && <Sidebar isSidebar={isSidebar} />}
           <main className="content">
-            {isLoggedIn && <Topbar setIsSidebar={setIsSidebar} />}
+            {showSidebarAndTopbar && <Topbar setIsSidebar={setIsSidebar} />}
             <Routes>
               <Route
                 path="/"
                 element={<Login handleLoginSuccess={handleLoginSuccess} />}
-              />
-              <Route
-                path="/signup"
-                element={<Signup handleSignupSuccess={handleSignupSuccess} />}
               />
               <Route path="/admins" element={<AdminList isSidebar={false} />} />
               <Route path="/dashboard" element={<Dashboard />} />
