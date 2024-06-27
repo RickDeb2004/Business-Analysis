@@ -32,7 +32,7 @@ function App() {
       setIsLoggedIn(true);
       navigate("/dashboard");
     }
-  }, [navigate]);
+  }, []);
 
   const handleLoginSuccess = (role) => {
     setIsLoggedIn(true);
