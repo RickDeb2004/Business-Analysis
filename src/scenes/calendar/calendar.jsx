@@ -15,20 +15,16 @@ import {
 import Header from "../../components/Header";
 import { tokens } from "../../theme";
 import { database } from "../../firebase";
-import {
-  ref,
-  set,
-  get,
-  remove,
-  onChildAdded,
-  onChildChanged,
-  onChildRemoved,
-} from "firebase/database";
+import { ref, set, get, remove } from "firebase/database";
+import EventDialog from "../../components/EventDialouge"; // Adjust the import path if necessary
+import GradientBox from "../../components/GradientBox";
 
 const Calendar = () => {
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
   const [currentEvents, setCurrentEvents] = useState([]);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [selectedDate, setSelectedDate] = useState(null);
 
   // Fetch events from Firebase when the component mounts
   useEffect(() => {
@@ -57,21 +53,27 @@ const Calendar = () => {
 
   // Handle date click
   const handleDateClick = (selected) => {
-    const title = prompt("Please enter a new title for your event");
-    const calendarApi = selected.view.calendar;
+    setSelectedDate(selected);
+    setIsDialogOpen(true);
+  };
+
+  const handleSaveEvent = (title) => {
+    const calendarApi = selectedDate.view.calendar;
     calendarApi.unselect();
 
     if (title) {
       const newEvent = {
-        id: `${selected.dateStr}-${title}`,
+        id: `${selectedDate.dateStr}-${title}`,
         title,
-        start: selected.startStr,
-        end: selected.endStr,
-        allDay: selected.allDay,
+        start: selectedDate.startStr,
+        end: selectedDate.endStr,
+        allDay: selectedDate.allDay,
       };
       calendarApi.addEvent(newEvent);
       addEventToFirebase(newEvent);
     }
+
+    setIsDialogOpen(false);
   };
 
   // Handle event click
@@ -111,7 +113,6 @@ const Calendar = () => {
                 sx={{
                   backgroundColor: colors.greenAccent[500],
                   margin: "10px 0",
-
                   border: `8px solid ${colors.grey[600]}`,
                   boxShadow: `0 0 10px ${colors.grey[600]}`,
                 }}
@@ -167,6 +168,13 @@ const Calendar = () => {
           />
         </Box>
       </Box>
+
+      {/* Event Dialog */}
+      <EventDialog
+        open={isDialogOpen}
+        onClose={() => setIsDialogOpen(false)}
+        onSave={handleSaveEvent}
+      />
     </Box>
   );
 };
