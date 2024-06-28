@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import FullCalendar, { formatDate } from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import timeGridPlugin from "@fullcalendar/timegrid";
@@ -14,35 +14,78 @@ import {
 } from "@mui/material";
 import Header from "../../components/Header";
 import { tokens } from "../../theme";
+import { database } from "../../firebase";
+import { ref, set, get, remove } from "firebase/database";
+import EventDialog from "../../components/EventDialouge"; // Adjust the import path if necessary
+import GradientBox from "../../components/GradientBox";
 
 const Calendar = () => {
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
   const [currentEvents, setCurrentEvents] = useState([]);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [selectedDate, setSelectedDate] = useState(null);
 
+  // Fetch events from Firebase when the component mounts
+  useEffect(() => {
+    const fetchEvents = async () => {
+      const eventsRef = ref(database, "events");
+      const snapshot = await get(eventsRef);
+      if (snapshot.exists()) {
+        const events = Object.values(snapshot.val());
+        setCurrentEvents(events);
+      }
+    };
+    fetchEvents();
+  }, []);
+
+  // Add event to Firebase
+  const addEventToFirebase = async (event) => {
+    const eventRef = ref(database, `events/${event.id}`);
+    await set(eventRef, event);
+  };
+
+  // Remove event from Firebase
+  const removeEventFromFirebase = async (eventId) => {
+    const eventRef = ref(database, `events/${eventId}`);
+    await remove(eventRef);
+  };
+
+  // Handle date click
   const handleDateClick = (selected) => {
-    const title = prompt("Please enter a new title for your event");
-    const calendarApi = selected.view.calendar;
+    setSelectedDate(selected);
+    setIsDialogOpen(true);
+  };
+
+  const handleSaveEvent = (title) => {
+    const calendarApi = selectedDate.view.calendar;
     calendarApi.unselect();
 
     if (title) {
-      calendarApi.addEvent({
-        id: `${selected.dateStr}-${title}`,
+      const newEvent = {
+        id: `${selectedDate.dateStr}-${title}`,
         title,
-        start: selected.startStr,
-        end: selected.endStr,
-        allDay: selected.allDay,
-      });
+        start: selectedDate.startStr,
+        end: selectedDate.endStr,
+        allDay: selectedDate.allDay,
+      };
+      calendarApi.addEvent(newEvent);
+      addEventToFirebase(newEvent);
     }
+
+    setIsDialogOpen(false);
   };
 
+  // Handle event click
   const handleEventClick = (selected) => {
     if (
       window.confirm(
         `Are you sure you want to delete the event '${selected.event.title}'`
       )
     ) {
+      const eventId = selected.event.id;
       selected.event.remove();
+      removeEventFromFirebase(eventId);
     }
   };
 
@@ -57,6 +100,10 @@ const Calendar = () => {
           backgroundColor={colors.primary[400]}
           p="15px"
           borderRadius="4px"
+          sx={{
+            border: `2px solid ${colors.tealAccent[600]}`,
+            boxShadow: `0 0 10px ${colors.tealAccent[600]}`,
+          }}
         >
           <Typography variant="h5">Events</Typography>
           <List>
@@ -66,7 +113,8 @@ const Calendar = () => {
                 sx={{
                   backgroundColor: colors.greenAccent[500],
                   margin: "10px 0",
-                  borderRadius: "2px",
+                  border: `8px solid ${colors.grey[600]}`,
+                  boxShadow: `0 0 10px ${colors.grey[600]}`,
                 }}
               >
                 <ListItemText
@@ -87,7 +135,14 @@ const Calendar = () => {
         </Box>
 
         {/* CALENDAR */}
-        <Box flex="1 1 100%" ml="15px">
+        <Box
+          flex="1 1 100%"
+          ml="15px"
+          sx={{
+            border: `2px solid ${colors.tealAccent[600]}`,
+            boxShadow: `0 0 10px ${colors.tealAccent[600]}`,
+          }}
+        >
           <FullCalendar
             height="75vh"
             plugins={[
@@ -109,21 +164,17 @@ const Calendar = () => {
             select={handleDateClick}
             eventClick={handleEventClick}
             eventsSet={(events) => setCurrentEvents(events)}
-            initialEvents={[
-              {
-                id: "12315",
-                title: "All-day event",
-                date: "2022-09-14",
-              },
-              {
-                id: "5123",
-                title: "Timed event",
-                date: "2022-09-28",
-              },
-            ]}
+            initialEvents={currentEvents}
           />
         </Box>
       </Box>
+
+      {/* Event Dialog */}
+      <EventDialog
+        open={isDialogOpen}
+        onClose={() => setIsDialogOpen(false)}
+        onSave={handleSaveEvent}
+      />
     </Box>
   );
 };
