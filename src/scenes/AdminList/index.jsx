@@ -3,7 +3,15 @@ import { Box, Button, IconButton } from "@mui/material";
 import { DataGrid, GridToolbar } from "@mui/x-data-grid";
 import { useTheme } from "@mui/material";
 import { tokens } from "../../theme";
-import { ref, get, remove, onChildAdded, onChildChanged, onChildRemoved, off } from "firebase/database";
+import {
+  ref,
+  get,
+  remove,
+  onChildAdded,
+  onChildChanged,
+  onChildRemoved,
+  off,
+} from "firebase/database";
 import { auth, database } from "../../firebase";
 import Header from "../../components/Header";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -23,16 +31,28 @@ const AdminList = () => {
       const snapshot = await get(adminsRef);
       if (snapshot.exists()) {
         const users = snapshot.val();
-        const adminList = Object.keys(users).map(key => ({ id: key, ...users[key] }));
+
+        const adminList = Object.keys(users).map((key) => ({
+          id: key,
+          ...users[key],
+        }));
+        setAdmins(adminList);
 
         // Fetch feedbacks and merge with admin data
         const feedbackRef = ref(database, "feedback");
         const feedbackSnapshot = await get(feedbackRef);
-        const feedbackData = feedbackSnapshot.exists() ? feedbackSnapshot.val() : {};
+        const feedbackData = feedbackSnapshot.exists()
+          ? feedbackSnapshot.val()
+          : {};
 
-        const adminListWithFeedback = adminList.map(admin => {
-          const adminFeedbacks = feedbackData[admin.uid] ? Object.values(feedbackData[admin.uid]) : [];
-          return { ...admin, feedback: adminFeedbacks.map(fb => fb.feedback).join(", ") };
+        const adminListWithFeedback = adminList.map((admin) => {
+          const adminFeedbacks = feedbackData[admin.uid]
+            ? Object.values(feedbackData[admin.uid])
+            : [];
+          return {
+            ...admin,
+            feedback: adminFeedbacks.map((fb) => fb.feedback).join(", "),
+          };
         });
 
         setAdmins(adminListWithFeedback);
@@ -59,33 +79,55 @@ const AdminList = () => {
       const data = snapshot.val();
       const feedbackRef = ref(database, `feedback/${data.uid}`);
       const feedbackSnapshot = await get(feedbackRef);
-      const feedbacks = feedbackSnapshot.exists() ? Object.values(feedbackSnapshot.val()) : [];
-      const feedbackText = feedbacks.map(fb => fb.feedback).join(", ");
+      const feedbacks = feedbackSnapshot.exists()
+        ? Object.values(feedbackSnapshot.val())
+        : [];
+      const feedbackText = feedbacks.map((fb) => fb.feedback).join(", ");
 
       setAdmins((prevAdmins) => {
-        const existingIndex = prevAdmins.findIndex((item) => item.id === snapshot.key);
+        const existingIndex = prevAdmins.findIndex(
+          (item) => item.id === snapshot.key
+        );
         if (existingIndex !== -1) {
           const updatedAdmins = [...prevAdmins];
-          updatedAdmins[existingIndex] = { id: snapshot.key, ...data, feedback: feedbackText };
+          updatedAdmins[existingIndex] = {
+            id: snapshot.key,
+            ...data,
+            feedback: feedbackText,
+          };
           return updatedAdmins;
         } else {
-          return [...prevAdmins, { id: snapshot.key, ...data, feedback: feedbackText }];
+          return [
+            ...prevAdmins,
+            { id: snapshot.key, ...data, feedback: feedbackText },
+          ];
         }
       });
     };
 
     const handleChildRemoved = (snapshot) => {
-      setAdmins((prevAdmins) => prevAdmins.filter((item) => item.id !== snapshot.key));
+      setAdmins((prevAdmins) =>
+        prevAdmins.filter((item) => item.id !== snapshot.key)
+      );
     };
 
-    const childAddedListener = onChildAdded(adminActivityRef, handleChildAddedOrChanged);
-    const childChangedListener = onChildChanged(adminActivityRef, handleChildAddedOrChanged);
-    const childRemovedListener = onChildRemoved(adminActivityRef, handleChildRemoved);
+    const childAddedListener = onChildAdded(
+      adminActivityRef,
+      handleChildAddedOrChanged
+    );
+    const childChangedListener = onChildChanged(
+      adminActivityRef,
+      handleChildAddedOrChanged
+    );
+    const childRemovedListener = onChildRemoved(
+      adminActivityRef,
+      handleChildRemoved
+    );
 
     return () => {
-      off(adminActivityRef, 'child_added', childAddedListener);
-      off(adminActivityRef, 'child_changed', childChangedListener);
-      off(adminActivityRef, 'child_removed', childRemovedListener);
+      off(adminActivityRef, "child_added", childAddedListener);
+      off(adminActivityRef, "child_changed", childChangedListener);
+      off(adminActivityRef, "child_removed", childRemovedListener);
     };
   }, []);
 
@@ -154,7 +196,7 @@ const AdminList = () => {
             <>
               <IconButton
                 color="secondary"
-                sx={{ marginRight: 1 }}
+                sx={{ marginRight: 1, color: colors.redAccent[600] }}
                 onClick={() => handleDelete(params.id)}
               >
                 <DeleteIcon />
@@ -175,10 +217,7 @@ const AdminList = () => {
 
   return (
     <Box m="20px">
-      <Header
-        title="ADMINS"
-        subtitle="List of Admins"
-      />
+      <Header title="ADMINS" subtitle="List of Admins" />
       <Box
         m="40px 0 0 0"
         height="75vh"
