@@ -50,7 +50,7 @@ const Feedback = () => {
               id: key,
               ...data[key],
             }));
-            setUserFeedbacks(feedbackList);
+            setUserFeedbacks(feedbackList.reverse());
           }
         });
       }
@@ -168,6 +168,7 @@ const Feedback = () => {
             sx={{
               p: "20px",
               mb: "20px",
+              width: "100%",
               backgroundColor: `linear-gradient(135deg, ${colors.tealAccent[600]} 30%, ${colors.greenAccent[600]} 100%)`,
               color: colors.grey[100],
               borderRadius: "8px",
