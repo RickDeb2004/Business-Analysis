@@ -3,7 +3,15 @@ import { Box, Button, IconButton } from "@mui/material";
 import { DataGrid, GridToolbar } from "@mui/x-data-grid";
 import { useTheme } from "@mui/material";
 import { tokens } from "../../theme";
-import { ref, get, remove, onChildAdded, onChildChanged, onChildRemoved, off } from "firebase/database";
+import {
+  ref,
+  get,
+  remove,
+  onChildAdded,
+  onChildChanged,
+  onChildRemoved,
+  off,
+} from "firebase/database";
 import { auth, database } from "../../firebase";
 import Header from "../../components/Header";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -23,7 +31,10 @@ const AdminList = () => {
       const snapshot = await get(adminsRef);
       if (snapshot.exists()) {
         const users = snapshot.val();
-        const adminList = Object.keys(users).map(key => ({ id: key, ...users[key] }));
+        const adminList = Object.keys(users).map((key) => ({
+          id: key,
+          ...users[key],
+        }));
         setAdmins(adminList);
 
         // Get the current user's ID and role
@@ -47,7 +58,9 @@ const AdminList = () => {
     const handleChildAddedOrChanged = (snapshot) => {
       const data = snapshot.val();
       setAdmins((prevAdmins) => {
-        const existingIndex = prevAdmins.findIndex((item) => item.id === snapshot.key);
+        const existingIndex = prevAdmins.findIndex(
+          (item) => item.id === snapshot.key
+        );
         if (existingIndex !== -1) {
           const updatedAdmins = [...prevAdmins];
           updatedAdmins[existingIndex] = { id: snapshot.key, ...data };
@@ -59,17 +72,28 @@ const AdminList = () => {
     };
 
     const handleChildRemoved = (snapshot) => {
-      setAdmins((prevAdmins) => prevAdmins.filter((item) => item.id !== snapshot.key));
+      setAdmins((prevAdmins) =>
+        prevAdmins.filter((item) => item.id !== snapshot.key)
+      );
     };
 
-    const childAddedListener = onChildAdded(adminActivityRef, handleChildAddedOrChanged);
-    const childChangedListener = onChildChanged(adminActivityRef, handleChildAddedOrChanged);
-    const childRemovedListener = onChildRemoved(adminActivityRef, handleChildRemoved);
+    const childAddedListener = onChildAdded(
+      adminActivityRef,
+      handleChildAddedOrChanged
+    );
+    const childChangedListener = onChildChanged(
+      adminActivityRef,
+      handleChildAddedOrChanged
+    );
+    const childRemovedListener = onChildRemoved(
+      adminActivityRef,
+      handleChildRemoved
+    );
 
     return () => {
-      off(adminActivityRef, 'child_added', childAddedListener);
-      off(adminActivityRef, 'child_changed', childChangedListener);
-      off(adminActivityRef, 'child_removed', childRemovedListener);
+      off(adminActivityRef, "child_added", childAddedListener);
+      off(adminActivityRef, "child_changed", childChangedListener);
+      off(adminActivityRef, "child_removed", childRemovedListener);
     };
   }, []);
 
@@ -137,7 +161,7 @@ const AdminList = () => {
             <>
               <IconButton
                 color="secondary"
-                sx={{ marginRight: 1 }}
+                sx={{ marginRight: 1, color: colors.redAccent[600] }}
                 onClick={() => handleDelete(params.id)}
               >
                 <DeleteIcon />
@@ -158,10 +182,7 @@ const AdminList = () => {
 
   return (
     <Box m="20px">
-      <Header
-        title="ADMINS"
-        subtitle="List of Admins"
-      />
+      <Header title="ADMINS" subtitle="List of Admins" />
       <Box
         m="40px 0 0 0"
         height="75vh"
