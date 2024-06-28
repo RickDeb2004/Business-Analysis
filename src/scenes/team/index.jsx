@@ -21,6 +21,7 @@ import SecurityOutlinedIcon from "@mui/icons-material/SecurityOutlined";
 import Header from "../../components/Header";
 import { useEffect, useState } from "react";
 import { auth, database } from "../../firebase";
+import { createUserWithEmailAndPassword, updatePassword } from "firebase/auth";
 import {
   off,
   onChildAdded,
@@ -213,16 +214,36 @@ const Team = () => {
     if (selectedUser) {
       const userRef = ref(database, `userActivity/${selectedUser.id}`);
       const updates = { ...formData };
-      if (!formData.password) delete updates.password; // Do not update password if it's empty
+      if (!formData.password)
+        delete updates.password; // Do not update password if it's empty
+      else await updatePassword(auth.currentUser, formData.password); // Update password
       await update(userRef, updates);
     } else {
-      const newUserId = uuidv4();
-      const userRef = ref(database, `userActivity/${newUserId}`);
-      await set(userRef, {
-        ...formData,
-        signInTime: new Date().toISOString(),
-        blocked: false,
-      });
+      try {
+        const userCredential = await createUserWithEmailAndPassword(
+          auth,
+          formData.email,
+          formData.password
+        );
+        const newUser = userCredential.user;
+
+        const newUserId = newUser.uid;
+        const userRef = ref(database, `userActivity/${newUserId}`);
+        await set(userRef, {
+          ...formData,
+          signInTime: new Date().toISOString(),
+          blocked: false,
+        });
+
+        // Set user role and name in another database reference
+        const userRoleRef = ref(database, `users/${newUserId}`);
+        await set(userRoleRef, {
+          role: formData.role,
+          name: formData.name,
+        });
+      } catch (error) {
+        console.error("Error creating new user: ", error);
+      }
     }
     handleDialogClose();
   };

@@ -36,55 +36,20 @@ const Login = ({ handleLoginSuccess }) => {
           : "Unknown User";
 
         // Record the sign-in activity
-        // Record the sign-in activity
-        if (role === "user" || role === "admin") {
-          const activityRef = ref(database, `${role}Activity`);
+        const activityRef = ref(database, `userActivity/${user.uid}`);
+        const now = new Date();
+        const hours = now.getHours().toString().padStart(2, "0");
+        const minutes = now.getMinutes().toString().padStart(2, "0");
+        const time = `${hours}:${minutes}`;
+        const day = now.getDate().toString().padStart(2, "0");
+        const month = (now.getMonth() + 1).toString().padStart(2, "0");
+        const year = now.getFullYear().toString().slice(-2);
+        const date = `${day}/${month}/${year}`;
+        const formattedTime = `${time} - ${date}`;
 
-          // Fetch existing activities
-          const existingActivitiesSnapshot = await get(activityRef);
-          let existingActivityKey = null;
-
-          if (existingActivitiesSnapshot.exists()) {
-            const activities = existingActivitiesSnapshot.val();
-            for (const [key, activity] of Object.entries(activities)) {
-              if (activity.email === user.email) {
-                existingActivityKey = key;
-                break;
-              }
-            }
-          }
-
-          const now = new Date();
-          const hours = now.getHours().toString().padStart(2, "0");
-          const minutes = now.getMinutes().toString().padStart(2, "0");
-          const time = `${hours}:${minutes}`;
-          const day = now.getDate().toString().padStart(2, "0");
-          const month = (now.getMonth() + 1).toString().padStart(2, "0");
-          const year = now.getFullYear().toString().slice(-2);
-          const date = `${day}/${month}/${year}`;
-          const formattedTime = `${time} - ${date}`;
-
-          if (existingActivityKey) {
-            // Update existing activity
-            const existingActivityRef = ref(
-              database,
-              `${role}Activity/${existingActivityKey}`
-            );
-            await update(existingActivityRef, {
-              signInTime: formattedTime,
-            });
-          } else {
-            // Push new activity
-            const newActivityRef = push(activityRef);
-            await set(newActivityRef, {
-              uid: user.uid,
-              name: userName,
-              email: user.email,
-              role: role,
-              signInTime: formattedTime,
-            });
-          }
-        }
+        await update(activityRef, {
+          signInTime: formattedTime,
+        });
 
         // Store user information in localStorage
         localStorage.setItem("user", JSON.stringify({ uid: user.uid, role }));
