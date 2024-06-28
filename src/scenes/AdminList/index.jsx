@@ -38,16 +38,21 @@ const AdminList = () => {
         }));
         setAdmins(adminList);
 
-        const adminList = Object.keys(users).map(key => ({ id: key, ...users[key] }));
-
         // Fetch feedbacks and merge with admin data
         const feedbackRef = ref(database, "feedback");
         const feedbackSnapshot = await get(feedbackRef);
-        const feedbackData = feedbackSnapshot.exists() ? feedbackSnapshot.val() : {};
+        const feedbackData = feedbackSnapshot.exists()
+          ? feedbackSnapshot.val()
+          : {};
 
-        const adminListWithFeedback = adminList.map(admin => {
-          const adminFeedbacks = feedbackData[admin.uid] ? Object.values(feedbackData[admin.uid]) : [];
-          return { ...admin, feedback: adminFeedbacks.map(fb => fb.feedback).join(", ") };
+        const adminListWithFeedback = adminList.map((admin) => {
+          const adminFeedbacks = feedbackData[admin.uid]
+            ? Object.values(feedbackData[admin.uid])
+            : [];
+          return {
+            ...admin,
+            feedback: adminFeedbacks.map((fb) => fb.feedback).join(", "),
+          };
         });
 
         setAdmins(adminListWithFeedback);
@@ -74,8 +79,10 @@ const AdminList = () => {
       const data = snapshot.val();
       const feedbackRef = ref(database, `feedback/${data.uid}`);
       const feedbackSnapshot = await get(feedbackRef);
-      const feedbacks = feedbackSnapshot.exists() ? Object.values(feedbackSnapshot.val()) : [];
-      const feedbackText = feedbacks.map(fb => fb.feedback).join(", ");
+      const feedbacks = feedbackSnapshot.exists()
+        ? Object.values(feedbackSnapshot.val())
+        : [];
+      const feedbackText = feedbacks.map((fb) => fb.feedback).join(", ");
 
       setAdmins((prevAdmins) => {
         const existingIndex = prevAdmins.findIndex(
@@ -83,10 +90,17 @@ const AdminList = () => {
         );
         if (existingIndex !== -1) {
           const updatedAdmins = [...prevAdmins];
-          updatedAdmins[existingIndex] = { id: snapshot.key, ...data, feedback: feedbackText };
+          updatedAdmins[existingIndex] = {
+            id: snapshot.key,
+            ...data,
+            feedback: feedbackText,
+          };
           return updatedAdmins;
         } else {
-          return [...prevAdmins, { id: snapshot.key, ...data, feedback: feedbackText }];
+          return [
+            ...prevAdmins,
+            { id: snapshot.key, ...data, feedback: feedbackText },
+          ];
         }
       });
     };
