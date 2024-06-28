@@ -1,4 +1,4 @@
-import { Box, Button, TextField, Autocomplete } from "@mui/material";
+import { Box, Button, TextField, Autocomplete, useTheme } from "@mui/material";
 import { Formik, FieldArray } from "formik";
 import * as yup from "yup";
 import useMediaQuery from "@mui/material/useMediaQuery";
@@ -7,11 +7,14 @@ import { getAuth } from "firebase/auth";
 import { get, getDatabase, ref, set } from "firebase/database";
 import { useEffect, useState } from "react";
 import { database } from "../../firebase";
+import { tokens } from "../../theme";
 
 const Form = () => {
+  const theme = useTheme();
   const [data, setData] = useState([]);
   const isNonMobile = useMediaQuery("(min-width:600px)");
   // console.log(countryData);
+  const colors = tokens(theme.palette.mode);
 
   const handleFormSubmit = (values) => {
     const auth = getAuth();
@@ -81,7 +84,15 @@ const Form = () => {
                 name="companyName"
                 error={!!touched.companyName && !!errors.companyName}
                 helperText={touched.companyName && errors.companyName}
-                sx={{ gridColumn: "span 4" }}
+                sx={{
+                  gridColumn: "span 4",
+                  marginBottom: "10px",
+                  boxShadow:
+                    "0px 2px 3px -1px rgba(0,0,0,0.1), 0px 1px 0px 0px rgba(25,28,33,0.02), 0px 0px 0px 1px rgba(25,28,33,0.08)",
+                  "&:hover": {
+                    boxShadow: "0px 0px 8px 2px rgba(33,150,243,0.5)",
+                  },
+                }}
               />
               <TextField
                 fullWidth
@@ -94,7 +105,15 @@ const Form = () => {
                 name="email"
                 error={!!touched.email && !!errors.email}
                 helperText={touched.email && errors.email}
-                sx={{ gridColumn: "span 4" }}
+                sx={{
+                  gridColumn: "span 4",
+                  marginBottom: "10px",
+                  boxShadow:
+                    "0px 2px 3px -1px rgba(0,0,0,0.1), 0px 1px 0px 0px rgba(25,28,33,0.02), 0px 0px 0px 1px rgba(25,28,33,0.08)",
+                  "&:hover": {
+                    boxShadow: "0px 0px 8px 2px rgba(33,150,243,0.5)",
+                  },
+                }}
               />
 
               <FieldArray name="salesPerMonth">
@@ -124,7 +143,15 @@ const Form = () => {
                             touched.salesPerMonth?.[index]?.month &&
                             errors.salesPerMonth?.[index]?.month
                           }
-                          sx={{ gridColumn: "span 2" }}
+                          sx={{
+                            gridColumn: "span 2",
+                            marginBottom: "10px",
+                            boxShadow:
+                              "0px 2px 3px -1px rgba(0,0,0,0.1), 0px 1px 0px 0px rgba(25,28,33,0.02), 0px 0px 0px 1px rgba(25,28,33,0.08)",
+                            "&:hover": {
+                              boxShadow: "0px 0px 8px 2px rgba(33,150,243,0.5)",
+                            },
+                          }}
                         />
                         <TextField
                           fullWidth
@@ -143,7 +170,15 @@ const Form = () => {
                             touched.salesPerMonth?.[index]?.amount &&
                             errors.salesPerMonth?.[index]?.amount
                           }
-                          sx={{ gridColumn: "span 2" }}
+                          sx={{
+                            gridColumn: "span 2",
+                            marginBottom: "10px",
+                            boxShadow:
+                              "0px 2px 3px -1px rgba(0,0,0,0.1), 0px 1px 0px 0px rgba(25,28,33,0.02), 0px 0px 0px 1px rgba(25,28,33,0.08)",
+                            "&:hover": {
+                              boxShadow: "0px 0px 8px 2px rgba(33,150,243,0.5)",
+                            },
+                          }}
                         />
                         <TextField
                           fullWidth
@@ -162,14 +197,52 @@ const Form = () => {
                             touched.salesPerMonth?.[index]?.country &&
                             errors.salesPerMonth?.[index]?.country
                           }
-                          sx={{ gridColumn: "span 4" }}
+                          sx={{
+                            gridColumn: "span 4",
+                            marginBottom: "10px",
+                            boxShadow:
+                              "0px 2px 3px -1px rgba(0,0,0,0.1), 0px 1px 0px 0px rgba(25,28,33,0.02), 0px 0px 0px 1px rgba(25,28,33,0.08)",
+                            "&:hover": {
+                              boxShadow: "0px 0px 8px 2px rgba(33,150,243,0.5)",
+                            },
+                          }}
                         />
                         <Button
                           type="button"
                           color="secondary"
                           variant="contained"
                           onClick={() => remove(index)}
-                          sx={{ gridColumn: "span 4" }}
+                          sx={{
+                            gridColumn: "span 4",
+                            display: "inline-flex",
+                            height: "48px",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            borderRadius: "8px",
+
+                            border: `2px solid ${colors.tealAccent[600]}`,
+                            boxShadow: `0 0 10px ${colors.tealAccent[600]}`,
+                            background:
+                              "linear-gradient(110deg,#000103 45%,#1e2631 55%,#000103)",
+                            backgroundSize: "200% 100%",
+                            px: 6,
+                            color: "#9CA3AF",
+                            fontWeight: "500",
+                            textTransform: "none",
+                            animation: "shimmer 2s infinite",
+                            transition: "color 0.3s",
+                            "&:hover": {
+                              color: "#FFFFFF",
+                            },
+                            "&:focus": {
+                              outline: "none",
+                              boxShadow: "0 0 0 4px rgba(148, 163, 184, 0.6)",
+                            },
+                            "@keyframes shimmer": {
+                              "0%": { backgroundPosition: "200% 0" },
+                              "100%": { backgroundPosition: "-200% 0" },
+                            },
+                          }}
                         >
                           Remove Sale
                         </Button>
@@ -182,7 +255,37 @@ const Form = () => {
                       onClick={() =>
                         push({ month: "", amount: "", country: "" })
                       }
-                      sx={{ gridColumn: "span 4" }}
+                      sx={{
+                        gridColumn: "span 4",
+                        display: "inline-flex",
+                        height: "48px",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        borderRadius: "8px",
+
+                        border: `2px solid ${colors.tealAccent[600]}`,
+                        boxShadow: `0 0 10px ${colors.tealAccent[600]}`,
+                        background:
+                          "linear-gradient(110deg,#000103 45%,#1e2631 55%,#000103)",
+                        backgroundSize: "200% 100%",
+                        px: 6,
+                        color: "#9CA3AF",
+                        fontWeight: "500",
+                        textTransform: "none",
+                        animation: "shimmer 2s infinite",
+                        transition: "color 0.3s",
+                        "&:hover": {
+                          color: "#FFFFFF",
+                        },
+                        "&:focus": {
+                          outline: "none",
+                          boxShadow: "0 0 0 4px rgba(148, 163, 184, 0.6)",
+                        },
+                        "@keyframes shimmer": {
+                          "0%": { backgroundPosition: "200% 0" },
+                          "100%": { backgroundPosition: "-200% 0" },
+                        },
+                      }}
                     >
                       Add Sale
                     </Button>
@@ -217,7 +320,15 @@ const Form = () => {
                             touched.uniqueSellingProducts?.[index]?.product &&
                             errors.uniqueSellingProducts?.[index]?.product
                           }
-                          sx={{ gridColumn: "span 2" }}
+                          sx={{
+                            gridColumn: "span 2",
+                            marginBottom: "10px",
+                            boxShadow:
+                              "0px 2px 3px -1px rgba(0,0,0,0.1), 0px 1px 0px 0px rgba(25,28,33,0.02), 0px 0px 0px 1px rgba(25,28,33,0.08)",
+                            "&:hover": {
+                              boxShadow: "0px 0px 8px 2px rgba(33,150,243,0.5)",
+                            },
+                          }}
                         />
                         <TextField
                           fullWidth
@@ -236,14 +347,52 @@ const Form = () => {
                             touched.uniqueSellingProducts?.[index]?.country &&
                             errors.uniqueSellingProducts?.[index]?.country
                           }
-                          sx={{ gridColumn: "span 2" }}
+                          sx={{
+                            gridColumn: "span 2",
+                            marginBottom: "10px",
+                            boxShadow:
+                              "0px 2px 3px -1px rgba(0,0,0,0.1), 0px 1px 0px 0px rgba(25,28,33,0.02), 0px 0px 0px 1px rgba(25,28,33,0.08)",
+                            "&:hover": {
+                              boxShadow: "0px 0px 8px 2px rgba(33,150,243,0.5)",
+                            },
+                          }}
                         />
                         <Button
                           type="button"
                           color="secondary"
                           variant="contained"
                           onClick={() => remove(index)}
-                          sx={{ gridColumn: "span 4" }}
+                          sx={{
+                            gridColumn: "span 4",
+                            display: "inline-flex",
+                            height: "48px",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            borderRadius: "8px",
+
+                            border: `2px solid ${colors.tealAccent[600]}`,
+                            boxShadow: `0 0 10px ${colors.tealAccent[600]}`,
+                            background:
+                              "linear-gradient(110deg,#000103 45%,#1e2631 55%,#000103)",
+                            backgroundSize: "200% 100%",
+                            px: 6,
+                            color: "#9CA3AF",
+                            fontWeight: "500",
+                            textTransform: "none",
+                            animation: "shimmer 2s infinite",
+                            transition: "color 0.3s",
+                            "&:hover": {
+                              color: "#FFFFFF",
+                            },
+                            "&:focus": {
+                              outline: "none",
+                              boxShadow: "0 0 0 4px rgba(148, 163, 184, 0.6)",
+                            },
+                            "@keyframes shimmer": {
+                              "0%": { backgroundPosition: "200% 0" },
+                              "100%": { backgroundPosition: "-200% 0" },
+                            },
+                          }}
                         >
                           Remove Product
                         </Button>
@@ -254,7 +403,37 @@ const Form = () => {
                       color="secondary"
                       variant="contained"
                       onClick={() => push({ product: "", country: "" })}
-                      sx={{ gridColumn: "span 4" }}
+                      sx={{
+                        gridColumn: "span 4",
+                        display: "inline-flex",
+                        height: "48px",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        borderRadius: "8px",
+
+                        border: `2px solid ${colors.tealAccent[600]}`,
+                        boxShadow: `0 0 10px ${colors.tealAccent[600]}`,
+                        background:
+                          "linear-gradient(110deg,#000103 45%,#1e2631 55%,#000103)",
+                        backgroundSize: "200% 100%",
+                        px: 6,
+                        color: "#9CA3AF",
+                        fontWeight: "500",
+                        textTransform: "none",
+                        animation: "shimmer 2s infinite",
+                        transition: "color 0.3s",
+                        "&:hover": {
+                          color: "#FFFFFF",
+                        },
+                        "&:focus": {
+                          outline: "none",
+                          boxShadow: "0 0 0 4px rgba(148, 163, 184, 0.6)",
+                        },
+                        "@keyframes shimmer": {
+                          "0%": { backgroundPosition: "200% 0" },
+                          "100%": { backgroundPosition: "-200% 0" },
+                        },
+                      }}
                     >
                       Add Product
                     </Button>
@@ -301,10 +480,27 @@ const Form = () => {
                                 touched.salesPerUnit?.[index]?.country &&
                                 errors.salesPerUnit?.[index]?.country
                               }
-                              sx={{ gridColumn: "span 2" }}
+                              sx={{
+                                gridColumn: "span 2",
+                                marginBottom: "10px",
+                                boxShadow:
+                                  "0px 2px 3px -1px rgba(0,0,0,0.1), 0px 1px 0px 0px rgba(25,28,33,0.02), 0px 0px 0px 1px rgba(25,28,33,0.08)",
+                                "&:hover": {
+                                  boxShadow:
+                                    "0px 0px 8px 2px rgba(33,150,243,0.5)",
+                                },
+                              }}
                             />
                           )}
-                          sx={{ gridColumn: "span 2" }}
+                          sx={{
+                            gridColumn: "span 2",
+                            marginBottom: "10px",
+                            boxShadow:
+                              "0px 2px 3px -1px rgba(0,0,0,0.1), 0px 1px 0px 0px rgba(25,28,33,0.02), 0px 0px 0px 1px rgba(25,28,33,0.08)",
+                            "&:hover": {
+                              boxShadow: "0px 0px 8px 2px rgba(33,150,243,0.5)",
+                            },
+                          }}
                         />
                         <TextField
                           fullWidth
@@ -323,14 +519,52 @@ const Form = () => {
                             touched.salesPerUnit?.[index]?.unitSales &&
                             errors.salesPerUnit?.[index]?.unitSales
                           }
-                          sx={{ gridColumn: "span 2" }}
+                          sx={{
+                            gridColumn: "span 2",
+                            marginBottom: "10px",
+                            boxShadow:
+                              "0px 2px 3px -1px rgba(0,0,0,0.1), 0px 1px 0px 0px rgba(25,28,33,0.02), 0px 0px 0px 1px rgba(25,28,33,0.08)",
+                            "&:hover": {
+                              boxShadow: "0px 0px 8px 2px rgba(33,150,243,0.5)",
+                            },
+                          }}
                         />
                         <Button
                           type="button"
                           color="secondary"
                           variant="contained"
                           onClick={() => remove(index)}
-                          sx={{ gridColumn: "span 4" }}
+                          sx={{
+                            gridColumn: "span 4",
+                            display: "inline-flex",
+                            height: "48px",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            borderRadius: "8px",
+
+                            border: `2px solid ${colors.tealAccent[600]}`,
+                            boxShadow: `0 0 10px ${colors.tealAccent[600]}`,
+                            background:
+                              "linear-gradient(110deg,#000103 45%,#1e2631 55%,#000103)",
+                            backgroundSize: "200% 100%",
+                            px: 6,
+                            color: "#9CA3AF",
+                            fontWeight: "500",
+                            textTransform: "none",
+                            animation: "shimmer 2s infinite",
+                            transition: "color 0.3s",
+                            "&:hover": {
+                              color: "#FFFFFF",
+                            },
+                            "&:focus": {
+                              outline: "none",
+                              boxShadow: "0 0 0 4px rgba(148, 163, 184, 0.6)",
+                            },
+                            "@keyframes shimmer": {
+                              "0%": { backgroundPosition: "200% 0" },
+                              "100%": { backgroundPosition: "-200% 0" },
+                            },
+                          }}
                         >
                           Remove Sale
                         </Button>
@@ -341,7 +575,37 @@ const Form = () => {
                       color="secondary"
                       variant="contained"
                       onClick={() => push({ country: "", unitSales: "" })}
-                      sx={{ gridColumn: "span 4" }}
+                      sx={{
+                        gridColumn: "span 4",
+                        display: "inline-flex",
+                        height: "48px",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        borderRadius: "8px",
+
+                        border: `2px solid ${colors.tealAccent[600]}`,
+                        boxShadow: `0 0 10px ${colors.tealAccent[600]}`,
+                        background:
+                          "linear-gradient(110deg,#000103 45%,#1e2631 55%,#000103)",
+                        backgroundSize: "200% 100%",
+                        px: 6,
+                        color: "#9CA3AF",
+                        fontWeight: "500",
+                        textTransform: "none",
+                        animation: "shimmer 2s infinite",
+                        transition: "color 0.3s",
+                        "&:hover": {
+                          color: "#FFFFFF",
+                        },
+                        "&:focus": {
+                          outline: "none",
+                          boxShadow: "0 0 0 4px rgba(148, 163, 184, 0.6)",
+                        },
+                        "@keyframes shimmer": {
+                          "0%": { backgroundPosition: "200% 0" },
+                          "100%": { backgroundPosition: "-200% 0" },
+                        },
+                      }}
                     >
                       Add Sale
                     </Button>
@@ -376,14 +640,52 @@ const Form = () => {
                             touched.locations?.[index] &&
                             errors.locations?.[index]
                           }
-                          sx={{ gridColumn: "span 4" }}
+                          sx={{
+                            gridColumn: "span 4",
+                            marginBottom: "10px",
+                            boxShadow:
+                              "0px 2px 3px -1px rgba(0,0,0,0.1), 0px 1px 0px 0px rgba(25,28,33,0.02), 0px 0px 0px 1px rgba(25,28,33,0.08)",
+                            "&:hover": {
+                              boxShadow: "0px 0px 8px 2px rgba(33,150,243,0.5)",
+                            },
+                          }}
                         />
                         <Button
                           type="button"
                           color="secondary"
                           variant="contained"
                           onClick={() => remove(index)}
-                          sx={{ gridColumn: "span 4" }}
+                          sx={{
+                            gridColumn: "span 4",
+                            display: "inline-flex",
+                            height: "48px",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            borderRadius: "8px",
+
+                            border: `2px solid ${colors.tealAccent[600]}`,
+                            boxShadow: `0 0 10px ${colors.tealAccent[600]}`,
+                            background:
+                              "linear-gradient(110deg,#000103 45%,#1e2631 55%,#000103)",
+                            backgroundSize: "200% 100%",
+                            px: 6,
+                            color: "#9CA3AF",
+                            fontWeight: "500",
+                            textTransform: "none",
+                            animation: "shimmer 2s infinite",
+                            transition: "color 0.3s",
+                            "&:hover": {
+                              color: "#FFFFFF",
+                            },
+                            "&:focus": {
+                              outline: "none",
+                              boxShadow: "0 0 0 4px rgba(148, 163, 184, 0.6)",
+                            },
+                            "@keyframes shimmer": {
+                              "0%": { backgroundPosition: "200% 0" },
+                              "100%": { backgroundPosition: "-200% 0" },
+                            },
+                          }}
                         >
                           Remove Location
                         </Button>
@@ -394,7 +696,37 @@ const Form = () => {
                       color="secondary"
                       variant="contained"
                       onClick={() => push("")}
-                      sx={{ gridColumn: "span 4" }}
+                      sx={{
+                        gridColumn: "span 4",
+                        display: "inline-flex",
+                        height: "48px",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        borderRadius: "8px",
+
+                        border: `2px solid ${colors.tealAccent[600]}`,
+                        boxShadow: `0 0 10px ${colors.tealAccent[600]}`,
+                        background:
+                          "linear-gradient(110deg,#000103 45%,#1e2631 55%,#000103)",
+                        backgroundSize: "200% 100%",
+                        px: 6,
+                        color: "#9CA3AF",
+                        fontWeight: "500",
+                        textTransform: "none",
+                        animation: "shimmer 2s infinite",
+                        transition: "color 0.3s",
+                        "&:hover": {
+                          color: "#FFFFFF",
+                        },
+                        "&:focus": {
+                          outline: "none",
+                          boxShadow: "0 0 0 4px rgba(148, 163, 184, 0.6)",
+                        },
+                        "@keyframes shimmer": {
+                          "0%": { backgroundPosition: "200% 0" },
+                          "100%": { backgroundPosition: "-200% 0" },
+                        },
+                      }}
                     >
                       Add Location
                     </Button>
@@ -403,7 +735,41 @@ const Form = () => {
               </FieldArray>
             </Box>
             <Box display="flex" justifyContent="end" mt="20px">
-              <Button type="submit" color="secondary" variant="contained">
+              <Button
+                type="submit"
+                color="secondary"
+                variant="contained"
+                sx={{
+                  display: "inline-flex",
+                  height: "48px",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  borderRadius: "8px",
+
+                  border: `2px solid ${colors.tealAccent[600]}`,
+                  boxShadow: `0 0 10px ${colors.tealAccent[600]}`,
+                  background:
+                    "linear-gradient(110deg,#000103 45%,#1e2631 55%,#000103)",
+                  backgroundSize: "200% 100%",
+                  px: 6,
+                  color: "#9CA3AF",
+                  fontWeight: "500",
+                  textTransform: "none",
+                  animation: "shimmer 2s infinite",
+                  transition: "color 0.3s",
+                  "&:hover": {
+                    color: "#FFFFFF",
+                  },
+                  "&:focus": {
+                    outline: "none",
+                    boxShadow: "0 0 0 4px rgba(148, 163, 184, 0.6)",
+                  },
+                  "@keyframes shimmer": {
+                    "0%": { backgroundPosition: "200% 0" },
+                    "100%": { backgroundPosition: "-200% 0" },
+                  },
+                }}
+              >
                 Submit
               </Button>
             </Box>
