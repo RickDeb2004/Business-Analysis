@@ -13,7 +13,7 @@ import FAQ from "./scenes/faq";
 import Geography from "./scenes/geography";
 import { CssBaseline, ThemeProvider } from "@mui/material";
 import { ColorModeContext, useMode } from "./theme";
-import Calendar from "./scenes/calendar/calendar";
+import Calender from "./scenes/calendar/calendar";
 import Login from "./scenes/login/index";
 import AdminList from "./scenes/AdminList";
 import Feedback from "./scenes/feedback";
@@ -73,7 +73,7 @@ function App() {
               <Route path="/pie" element={<Pie />} />
               <Route path="/line" element={<Line />} />
               <Route path="/faq" element={<FAQ />} />
-              <Route path="/calendar" element={<Calendar />} />
+              <Route path="/calendar" element={<Calender />} />
               <Route path="/geography" element={<Geography />} />
             </Routes>
           </main>
