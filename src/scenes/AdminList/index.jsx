@@ -24,7 +24,18 @@ const AdminList = () => {
       if (snapshot.exists()) {
         const users = snapshot.val();
         const adminList = Object.keys(users).map(key => ({ id: key, ...users[key] }));
-        setAdmins(adminList);
+
+        // Fetch feedbacks and merge with admin data
+        const feedbackRef = ref(database, "feedback");
+        const feedbackSnapshot = await get(feedbackRef);
+        const feedbackData = feedbackSnapshot.exists() ? feedbackSnapshot.val() : {};
+
+        const adminListWithFeedback = adminList.map(admin => {
+          const adminFeedbacks = feedbackData[admin.uid] ? Object.values(feedbackData[admin.uid]) : [];
+          return { ...admin, feedback: adminFeedbacks.map(fb => fb.feedback).join(", ") };
+        });
+
+        setAdmins(adminListWithFeedback);
 
         // Get the current user's ID and role
         const currentUserId = auth.currentUser.uid;
@@ -44,16 +55,21 @@ const AdminList = () => {
   useEffect(() => {
     const adminActivityRef = ref(database, "adminActivity");
 
-    const handleChildAddedOrChanged = (snapshot) => {
+    const handleChildAddedOrChanged = async (snapshot) => {
       const data = snapshot.val();
+      const feedbackRef = ref(database, `feedback/${data.uid}`);
+      const feedbackSnapshot = await get(feedbackRef);
+      const feedbacks = feedbackSnapshot.exists() ? Object.values(feedbackSnapshot.val()) : [];
+      const feedbackText = feedbacks.map(fb => fb.feedback).join(", ");
+
       setAdmins((prevAdmins) => {
         const existingIndex = prevAdmins.findIndex((item) => item.id === snapshot.key);
         if (existingIndex !== -1) {
           const updatedAdmins = [...prevAdmins];
-          updatedAdmins[existingIndex] = { id: snapshot.key, ...data };
+          updatedAdmins[existingIndex] = { id: snapshot.key, ...data, feedback: feedbackText };
           return updatedAdmins;
         } else {
-          return [...prevAdmins, { id: snapshot.key, ...data }];
+          return [...prevAdmins, { id: snapshot.key, ...data, feedback: feedbackText }];
         }
       });
     };
@@ -116,9 +132,10 @@ const AdminList = () => {
 
   const columns = [
     { field: "id", headerName: "ID", flex: 0.5 },
-    { field: "name", headerName: "Name", flex: 1 },
+    { field: "name", headerName: "Name", flex: 0.75 },
     { field: "email", headerName: "Email", flex: 1 },
     { field: "signInTime", headerName: "Login Time", flex: 1 },
+    { field: "feedback", headerName: "Feedback", flex: 2 },
     {
       field: "actions",
       headerName: "Actions",
