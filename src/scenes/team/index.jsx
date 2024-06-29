@@ -30,10 +30,11 @@ import {
   get,
   update,
   set,
+  remove,
 } from "firebase/database";
 import { v4 as uuidv4 } from "uuid";
 import { createUserWithEmailAndPassword } from "firebase/auth";
-
+import Delete from "@mui/icons-material/Delete";
 const Team = () => {
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
@@ -111,6 +112,19 @@ const Team = () => {
       field: "password",
       headerName: "Password",
       flex: 1,
+    },
+    {
+      field: "delete",
+      headerName: "Delete",
+      flex: 1,
+      renderCell: ({ row }) => (
+        <Button
+          onClick={() => handleConfirmDelete(row)}
+          sx={{ color: colors.redAccent[400] }}
+        >
+          <Delete />
+        </Button>
+      ),
     },
   ];
 
@@ -247,6 +261,19 @@ const Team = () => {
       }
     }
     handleDialogClose();
+  };
+  const handleConfirmDelete = async (users) => {
+    try {
+      const userActivityRef = ref(database, `userActivity/${users.id}`);
+      await remove(userActivityRef);
+      const userRef = ref(database, `users/${user.id}`);
+      await remove(userRef);
+      setUserData((prevUserData) =>
+        prevUserData.filter((user) => user.id !== users.id)
+      );
+    } catch (error) {
+      console.error("Error deleting contact:", error);
+    }
   };
   const lampEffectStyle = {
     position: "relative",
