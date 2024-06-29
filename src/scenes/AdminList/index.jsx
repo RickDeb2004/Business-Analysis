@@ -31,32 +31,33 @@ const AdminList = () => {
       const snapshot = await get(adminsRef);
       if (snapshot.exists()) {
         const users = snapshot.val();
-
+  
         const adminList = Object.keys(users).map((key) => ({
           id: key,
           ...users[key],
         }));
-        setAdmins(adminList);
-
+  
         // Fetch feedbacks and merge with admin data
         const feedbackRef = ref(database, "feedback");
         const feedbackSnapshot = await get(feedbackRef);
-        const feedbackData = feedbackSnapshot.exists()
-          ? feedbackSnapshot.val()
-          : {};
-
+        const feedbackData = feedbackSnapshot.exists() ? feedbackSnapshot.val() : {};
+  
         const adminListWithFeedback = adminList.map((admin) => {
-          const adminFeedbacks = feedbackData[admin.uid]
-            ? Object.values(feedbackData[admin.uid])
-            : [];
+          const adminFeedbacks = feedbackData[admin.uid] ? Object.values(feedbackData[admin.uid]) : [];
+          
+          // Get the most recent feedback
+          const latestFeedback = adminFeedbacks.reduce((latest, current) => {
+            return new Date(current.timestamp) > new Date(latest.timestamp) ? current : latest;
+          }, adminFeedbacks[0]);
+  
           return {
             ...admin,
-            feedback: adminFeedbacks.map((fb) => fb.feedback).join(", "),
+            feedback: latestFeedback ? latestFeedback.feedback : "No feedback",
           };
         });
-
+  
         setAdmins(adminListWithFeedback);
-
+  
         // Get the current user's ID and role
         const currentUserId = auth.currentUser.uid;
         const usersRef = ref(database, "users");
@@ -71,6 +72,7 @@ const AdminList = () => {
     };
     fetchAdmins();
   }, []);
+  
 
   useEffect(() => {
     const adminActivityRef = ref(database, "adminActivity");
@@ -129,34 +131,6 @@ const AdminList = () => {
       off(adminActivityRef, "child_changed", childChangedListener);
       off(adminActivityRef, "child_removed", childRemovedListener);
     };
-  }, []);
-
-  useEffect(() => {
-    const cleanupOldActivities = async () => {
-      const adminActivityRef = ref(database, "adminActivity");
-      const snapshot = await get(adminActivityRef);
-
-      if (snapshot.exists()) {
-        const data = snapshot.val();
-        const now = new Date().getTime();
-        const oneDay = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
-
-        for (let key in data) {
-          const activity = data[key];
-          const signInTime = new Date(activity.signInTime).getTime();
-
-          if (now - signInTime > oneDay) {
-            const activityRef = ref(database, `adminActivity/${key}`);
-            await remove(activityRef);
-          }
-        }
-      }
-    };
-
-    cleanupOldActivities();
-    const interval = setInterval(cleanupOldActivities, 24 * 60 * 60 * 1000);
-
-    return () => clearInterval(interval);
   }, []);
 
   const handleDelete = async (id) => {
