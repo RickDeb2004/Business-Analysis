@@ -32,6 +32,7 @@ import {
   set,
 } from "firebase/database";
 import { v4 as uuidv4 } from "uuid";
+import { createUserWithEmailAndPassword } from "firebase/auth";
 
 const Team = () => {
   const theme = useTheme();
@@ -211,18 +212,39 @@ const Team = () => {
 
   const handleFormSubmit = async () => {
     if (selectedUser) {
+      // Updating an existing user
       const userRef = ref(database, `userActivity/${selectedUser.id}`);
       const updates = { ...formData };
       if (!formData.password) delete updates.password; // Do not update password if it's empty
       await update(userRef, updates);
+
+      const userRefUsers = ref(database, `users/${selectedUser.id}`);
+      await update(userRefUsers, updates);
     } else {
-      const newUserId = uuidv4();
-      const userRef = ref(database, `userActivity/${newUserId}`);
-      await set(userRef, {
-        ...formData,
-        signInTime: new Date().toISOString(),
-        blocked: false,
-      });
+      // Adding a new user
+      try {
+        const userCredential = await createUserWithEmailAndPassword(
+          auth,
+          formData.email,
+          formData.password
+        );
+        const newUser = userCredential.user;
+        const userRef = ref(database, `userActivity/${newUser.uid}`);
+        await set(userRef, {
+          ...formData,
+          signInTime: new Date().toISOString(),
+          blocked: false,
+        });
+
+        const userRefUsers = ref(database, `users/${newUser.uid}`);
+        await set(userRefUsers, {
+          ...formData,
+          signInTime: new Date().toISOString(),
+          blocked: false,
+        });
+      } catch (error) {
+        console.error("Error adding new user:", error);
+      }
     }
     handleDialogClose();
   };
