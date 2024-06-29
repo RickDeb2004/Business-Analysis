@@ -96,11 +96,11 @@ const Dashboard = () => {
         const db = getDatabase();
         const salesPerUnitRef = ref(
           db,
-          `users/${auth.currentUser.uid}/formdata/salesPerUnit`
+          `users/${auth.currentUser.uid}/formData/salesPerUnit`
         );
         console.log(
           "Fetching data from path:",
-          `users/${auth.currentUser.uid}/formdata/salesPerUnit`
+          `users/${auth.currentUser.uid}/formData/salesPerUnit`
         );
 
         const snapshot = await get(salesPerUnitRef);
@@ -261,7 +261,7 @@ const Dashboard = () => {
           }}
         >
           <StatBox
-            title="1300"
+            title={totalSalesPerUnit}
             subtitle="Sales Obtained"
             progress="0.50"
             increase="+21%"
