@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Box, Button, TextField, Typography, useTheme } from "@mui/material";
 import { tokens } from "../../theme";
 import { auth, database } from "../../firebase"; // Import Firebase services
@@ -12,8 +12,11 @@ const Login = ({ handleLoginSuccess }) => {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
 
+
+
   const handleLogin = async () => {
     try {
+      
       const userCredential = await signInWithEmailAndPassword(
         auth,
         email,

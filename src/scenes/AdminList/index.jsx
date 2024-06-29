@@ -1,28 +1,24 @@
 import { useState, useEffect } from "react";
-import { Box, Button, IconButton } from "@mui/material";
+import { Box, Button, Dialog, DialogActions, DialogContent, DialogTitle, FormControl, IconButton, InputLabel, TextField } from "@mui/material";
 import { DataGrid, GridToolbar } from "@mui/x-data-grid";
 import { useTheme } from "@mui/material";
 import { tokens } from "../../theme";
-import {
-  ref,
-  get,
-  remove,
-  onChildAdded,
-  onChildChanged,
-  onChildRemoved,
-  off,
-} from "firebase/database";
+import { ref, get, set, remove, onChildAdded, onChildChanged, onChildRemoved, off } from "firebase/database";
 import { auth, database } from "../../firebase";
 import Header from "../../components/Header";
 import DeleteIcon from "@mui/icons-material/Delete";
 import ChatIcon from "@mui/icons-material/Chat";
 import { useNavigate } from "react-router-dom";
+import { createUserWithEmailAndPassword } from "firebase/auth";
 
 const AdminList = () => {
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
   const [admins, setAdmins] = useState([]);
   const [currentUserRole, setCurrentUserRole] = useState(null); // To store the current user's role
+  const [openDialog, setOpenDialog] = useState(false);
+  const [formData, setFormData] = useState({ name: "", email: "", password: "", role: "admin" });
+  const [error, setError] = useState("");
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -31,32 +27,34 @@ const AdminList = () => {
       const snapshot = await get(adminsRef);
       if (snapshot.exists()) {
         const users = snapshot.val();
-
+  
         const adminList = Object.keys(users).map((key) => ({
           id: key,
           ...users[key],
         }));
-        setAdmins(adminList);
-
+  
         // Fetch feedbacks and merge with admin data
         const feedbackRef = ref(database, "feedback");
         const feedbackSnapshot = await get(feedbackRef);
-        const feedbackData = feedbackSnapshot.exists()
-          ? feedbackSnapshot.val()
-          : {};
-
+        const feedbackData = feedbackSnapshot.exists() ? feedbackSnapshot.val() : {};
+  
+        // console.log(feedbackData)
         const adminListWithFeedback = adminList.map((admin) => {
-          const adminFeedbacks = feedbackData[admin.uid]
-            ? Object.values(feedbackData[admin.uid])
-            : [];
+          // console.log(admin.uid)
+          const adminFeedbacks = feedbackData[admin.uid] ? Object.values(feedbackData[admin.uid]) : Object.values(feedbackData[admin.id]);
+          // console.log(adminFeedbacks)
+          // Get the most recent feedback
+          const length = adminFeedbacks.length;
+          const latestFeedback = length > 0 ? adminFeedbacks[length - 1] : null;
+  
           return {
             ...admin,
-            feedback: adminFeedbacks.map((fb) => fb.feedback).join(", "),
+            feedback: latestFeedback ? latestFeedback.feedback : "No feedback",
           };
         });
-
+  
         setAdmins(adminListWithFeedback);
-
+  
         // Get the current user's ID and role
         const currentUserId = auth.currentUser.uid;
         const usersRef = ref(database, "users");
@@ -79,15 +77,11 @@ const AdminList = () => {
       const data = snapshot.val();
       const feedbackRef = ref(database, `feedback/${data.uid}`);
       const feedbackSnapshot = await get(feedbackRef);
-      const feedbacks = feedbackSnapshot.exists()
-        ? Object.values(feedbackSnapshot.val())
-        : [];
+      const feedbacks = feedbackSnapshot.exists() ? Object.values(feedbackSnapshot.val()) : [];
       const feedbackText = feedbacks.map((fb) => fb.feedback).join(", ");
 
       setAdmins((prevAdmins) => {
-        const existingIndex = prevAdmins.findIndex(
-          (item) => item.id === snapshot.key
-        );
+        const existingIndex = prevAdmins.findIndex((item) => item.id === snapshot.key);
         if (existingIndex !== -1) {
           const updatedAdmins = [...prevAdmins];
           updatedAdmins[existingIndex] = {
@@ -106,57 +100,18 @@ const AdminList = () => {
     };
 
     const handleChildRemoved = (snapshot) => {
-      setAdmins((prevAdmins) =>
-        prevAdmins.filter((item) => item.id !== snapshot.key)
-      );
+      setAdmins((prevAdmins) => prevAdmins.filter((item) => item.id !== snapshot.key));
     };
 
-    const childAddedListener = onChildAdded(
-      adminActivityRef,
-      handleChildAddedOrChanged
-    );
-    const childChangedListener = onChildChanged(
-      adminActivityRef,
-      handleChildAddedOrChanged
-    );
-    const childRemovedListener = onChildRemoved(
-      adminActivityRef,
-      handleChildRemoved
-    );
+    const childAddedListener = onChildAdded(adminActivityRef, handleChildAddedOrChanged);
+    const childChangedListener = onChildChanged(adminActivityRef, handleChildAddedOrChanged);
+    const childRemovedListener = onChildRemoved(adminActivityRef, handleChildRemoved);
 
     return () => {
       off(adminActivityRef, "child_added", childAddedListener);
       off(adminActivityRef, "child_changed", childChangedListener);
       off(adminActivityRef, "child_removed", childRemovedListener);
     };
-  }, []);
-
-  useEffect(() => {
-    const cleanupOldActivities = async () => {
-      const adminActivityRef = ref(database, "adminActivity");
-      const snapshot = await get(adminActivityRef);
-
-      if (snapshot.exists()) {
-        const data = snapshot.val();
-        const now = new Date().getTime();
-        const oneDay = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
-
-        for (let key in data) {
-          const activity = data[key];
-          const signInTime = new Date(activity.signInTime).getTime();
-
-          if (now - signInTime > oneDay) {
-            const activityRef = ref(database, `adminActivity/${key}`);
-            await remove(activityRef);
-          }
-        }
-      }
-    };
-
-    cleanupOldActivities();
-    const interval = setInterval(cleanupOldActivities, 24 * 60 * 60 * 1000);
-
-    return () => clearInterval(interval);
   }, []);
 
   const handleDelete = async (id) => {
@@ -171,6 +126,57 @@ const AdminList = () => {
   const handleChat = (id) => {
     navigate(`/chat/${id}`);
   };
+
+  const handleDialogOpen = () => {
+    setOpenDialog(true);
+    setFormData({ name: "", email: "", password: "", role: "admin" });
+    setError("");
+  };
+
+  const handleDialogClose = () => {
+    setOpenDialog(false);
+  };
+
+  const handleFormSubmit = async () => {
+    try {
+      const usersRef = ref(database, "users");
+      const usersSnapshot = await get(usersRef);
+      const usersData = usersSnapshot.exists() ? usersSnapshot.val() : {};
+  
+      // Check if the email is already in use
+      if (Object.values(usersData).some(user => user.email === formData.email)) {
+        setError("Email already in use");
+        return;
+      }
+  
+      // Create the user with email and password in Firebase Auth
+      const userCredential = await createUserWithEmailAndPassword(auth, formData.email, formData.password);
+      const user = userCredential.user;
+  
+      // Add the new admin data to the users ref
+      await set(ref(database, `users/${user.uid}`), {
+        name: formData.name,
+        email: formData.email,
+        password: formData.password,
+        role: formData.role,
+      });
+  
+      // Add the new admin data to the adminActivity ref
+      await set(ref(database, `adminActivity/${user.uid}`), {
+        name: formData.name,
+        email: formData.email,
+        signInTime: "new",
+        feedback: "---",
+      });
+  
+      // Close the dialog and reset the form
+      handleDialogClose();
+    } catch (error) {
+      console.error("Error adding admin:", error);
+      setError("Failed to add admin. Please try again.");
+    }
+  };
+  
 
   const columns = [
     { field: "id", headerName: "ID", flex: 0.5 },
@@ -218,8 +224,40 @@ const AdminList = () => {
   return (
     <Box m="20px">
       <Header title="ADMINS" subtitle="List of Admins" />
+      <Button variant="contained" color="primary" onClick={handleDialogOpen} sx={{
+              display: "inline-flex",
+              height: "48px",
+              alignItems: "center",
+              justifyContent: "center",
+              borderRadius: "8px",
+
+              border: `2px solid ${colors.tealAccent[600]}`,
+              boxShadow: `0 0 10px ${colors.tealAccent[600]}`,
+              background:
+                "linear-gradient(110deg,#000103 45%,#1e2631 55%,#000103)",
+              backgroundSize: "200% 100%",
+              px: 6,
+              color: "#9CA3AF",
+              fontWeight: "500",
+              textTransform: "none",
+              animation: "shimmer 2s infinite",
+              transition: "color 0.3s",
+              "&:hover": {
+                color: "#FFFFFF",
+              },
+              "&:focus": {
+                outline: "none",
+                boxShadow: "0 0 0 4px rgba(148, 163, 184, 0.6)",
+              },
+              "@keyframes shimmer": {
+                "0%": { backgroundPosition: "200% 0" },
+                "100%": { backgroundPosition: "-200% 0" },
+              },
+            }}>
+        Add Admin
+      </Button>
       <Box
-        m="40px 0 0 0"
+        m="10px 0 0 0"
         height="75vh"
         sx={{
           "& .MuiDataGrid-root": {
@@ -256,6 +294,92 @@ const AdminList = () => {
           components={{ Toolbar: GridToolbar }}
         />
       </Box>
+      <Dialog open={openDialog} onClose={handleDialogClose}>
+        <DialogTitle sx={{ backgroundColor: "#000000", color: colors.yellowAccent[600] }}>
+          Add Admin
+        </DialogTitle>
+        <DialogContent sx={{ backgroundColor: "#000000" }}>
+          {error && <Box sx={{ color: 'red', marginBottom: 2 }}>{error}</Box>}
+          <TextField
+            margin="dense"
+            label="Name"
+            fullWidth
+            variant="outlined"
+            value={formData.name}
+            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+            sx={{
+              marginBottom: "10px",
+              boxShadow:
+                "0px 2px 3px -1px rgba(0,0,0,0.1), 0px 1px 0px 0px rgba(25,28,33,0.02), 0px 0px 0px 1px rgba(25,28,33,0.08)",
+              "&:hover": {
+                boxShadow: "0px 0px 8px 2px rgba(33,150,243,0.5)",
+              },
+            }}
+          />
+          <TextField
+            margin="dense"
+            label="Email"
+            fullWidth
+            variant="outlined"
+            value={formData.email}
+            onChange={(e) =>
+              setFormData({ ...formData, email: e.target.value })
+            }
+            sx={{
+              marginBottom: "10px",
+              boxShadow:
+                "0px 2px 3px -1px rgba(0,0,0,0.1), 0px 1px 0px 0px rgba(25,28,33,0.02), 0px 0px 0px 1px rgba(25,28,33,0.08)",
+              "&:hover": {
+                boxShadow: "0px 0px 8px 2px rgba(33,150,243,0.5)",
+              },
+            }}
+          />
+          <TextField
+            margin="dense"
+            label="Password"
+            type="password"
+            fullWidth
+            variant="outlined"
+            value={formData.password}
+            onChange={(e) =>
+              setFormData({ ...formData, password: e.target.value })
+            }
+            sx={{
+              marginBottom: "10px",
+              boxShadow:
+                "0px 2px 3px -1px rgba(0,0,0,0.1), 0px 1px 0px 0px rgba(25,28,33,0.02), 0px 0px 0px 1px rgba(25,28,33,0.08)",
+              "&:hover": {
+                boxShadow: "0px 0px 8px 2px rgba(33,150,243,0.5)",
+              },
+            }}
+          />
+          <TextField
+            margin="dense"
+            label="Role"
+            type="text"
+            fullWidth
+            disabled
+            variant="outlined"
+            value={"admin"}
+            sx={{
+              marginBottom: "10px",
+              boxShadow:
+                "0px 2px 3px -1px rgba(0,0,0,0.1), 0px 1px 0px 0px rgba(25,28,33,0.02), 0px 0px 0px 1px rgba(25,28,33,0.08)",
+              "&:hover": {
+                boxShadow: "0px 0px 8px 2px rgba(33,150,243,0.5)",
+              },
+            }}
+          />
+        </DialogContent>
+        <DialogActions sx={{ backgroundColor: "#000000" }}>
+          <Button onClick={handleDialogClose} color="secondary">
+            Cancel
+          </Button>
+          <Button onClick={handleFormSubmit} color="info">
+            Add
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };
