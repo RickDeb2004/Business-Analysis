@@ -1,11 +1,63 @@
 import { ResponsivePie } from "@nivo/pie";
 import { tokens } from "../theme";
 import { useTheme } from "@mui/material";
-import { mockPieData as data } from "../data/mockData";
+import { useEffect, useState } from "react";
+import { auth, database } from "../firebase";
+import { get, ref } from "firebase/database";
 
 const PieChart = () => {
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        if (!auth.currentUser) {
+          console.error("User is not authenticated");
+          return;
+        }
+        // Fetch salesPerUnit data from Firebase Realtime Database for the current user
+        const db = database;
+        const salesRef = ref(
+          db,
+          `users/${auth.currentUser.uid}/formData/salesPerUnit`
+        );
+        const productsRef = ref(
+          db,
+          `users/${auth.currentUser.uid}/formData/uniqueSellingProducts`
+        );
+
+        const salesSnapshot = await get(salesRef);
+        const productsSnapshot = await get(productsRef);
+
+        if (salesSnapshot.exists() && productsSnapshot.exists()) {
+          const salesData = salesSnapshot.val();
+          const productsData = productsSnapshot.val();
+
+          // Merging salesPerUnit with uniqueSellingProducts
+          const mergedData = productsData.map((product, index) => ({
+            id: product.product,
+            value: salesData[index].unitSales,
+          }));
+
+          setData(mergedData);
+        }
+        setLoading(false);
+      } catch (error) {
+        console.error("Error fetching data:", error);
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  if (loading) {
+    return <div>Loading...</div>;
+  }
+
   return (
     <ResponsivePie
       data={data}
