@@ -52,6 +52,16 @@ const Form = () => {
           console.error("Error saving data:", error);
         });
     }
+
+    //clear form
+    setInitialValues({
+      companyName: "",
+      email: "",
+      salesPerMonth: [{ month: "", amount: "", country: "" }],
+      uniqueSellingProducts: [{ product: "", country: "" }],
+      salesPerUnit: [{ country: "", unitSales: "" }],
+      locations: [""],
+    });
   };
 
   useEffect(() => {
