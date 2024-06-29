@@ -254,18 +254,6 @@ const SubmissionList = ({ formSubmissions, handleEditForm }) => {
                         </SectionTitle>
                         <TableContainer>
                           <Table>
-                            <TableHead>
-                              <TableRow>
-                                <TableCell>
-                                  <Typography
-                                    fontFamily={"sans-serif"}
-                                    fontSize={"1rem"}
-                                  >
-                                    Location
-                                  </Typography>
-                                </TableCell>
-                              </TableRow>
-                            </TableHead>
                             <TableBody>
                               {submission.locations.map((location, idx) => (
                                 <TableRow key={idx}>
