@@ -23,7 +23,9 @@ const Dashboard = () => {
   const colors = tokens(theme.palette.mode);
   const [totalRevenue, setTotalRevenue] = useState(0);
   const [location, setLocations] = useState([]);
-
+  const [userActivityCount, setUserActivityCount] = useState(0);
+  const [totalSalesPerUnit, setTotalSalesPerUnit] = useState(0);
+  const [dataLoaded, setDataLoaded] = useState(false);
   useEffect(() => {
     const fetchTotalRevenue = async () => {
       if (!auth.currentUser) {
@@ -65,15 +67,86 @@ const Dashboard = () => {
 
         if (snapshot.exists()) {
           const firebaseData = snapshot.val();
+          console.log("fetched from firebase", firebaseData);
           setLocations(firebaseData);
         }
       } catch (error) {
         console.error("Error fetching locations:", error);
       }
     };
+    const fetchUserActivityCount = async () => {
+      if (!auth.currentUser) {
+        console.error("User is not authenticated");
+        return;
+      }
+      const db = getDatabase();
+      const dataRef = ref(db, `userActivity`);
+      const snapshot = await get(dataRef);
+
+      if (snapshot.exists()) {
+        const firebaseData = snapshot.val();
+        const validEntriesCount = Object.keys(firebaseData).length;
+        setUserActivityCount(validEntriesCount);
+      } else {
+        console.log("No user activity data available");
+      }
+    };
+    const fetchTotalSalesPerUnit = async () => {
+      try {
+        const db = getDatabase();
+        const salesPerUnitRef = ref(
+          db,
+          `users/${auth.currentUser.uid}/formdata/salesPerUnit`
+        );
+        console.log(
+          "Fetching data from path:",
+          `users/${auth.currentUser.uid}/formdata/salesPerUnit`
+        );
+
+        const snapshot = await get(salesPerUnitRef);
+        console.log("Snapshot:", snapshot);
+
+        // Handle the fetched data
+        if (snapshot.exists()) {
+          const salesData = snapshot.val();
+          console.log("Fetched data from Firebase:", salesData); // Log the fetched data
+
+          // Check if the fetched data is an array or an object
+          if (Array.isArray(salesData)) {
+            const totalSales = salesData.reduce(
+              (sum, item) => sum + (item.unitSales || 0),
+              0
+            );
+            console.log("Total Sales Calculated (Array):", totalSales);
+            setTotalSalesPerUnit(totalSales);
+          } else if (typeof salesData === "object") {
+            const totalSales = Object.values(salesData).reduce(
+              (sum, item) => sum + (item.unitSales || 0),
+              0
+            );
+            console.log("Total Sales Calculated (Object):", totalSales);
+            setTotalSalesPerUnit(totalSales);
+          } else {
+            console.log(
+              "Sales data format is neither an array nor an object:",
+              salesData
+            );
+          }
+        } else {
+          console.log("No sales per unit data available");
+        }
+
+        setDataLoaded(true); // Set data loaded state
+      } catch (error) {
+        console.error("Error fetching sales per unit data:", error);
+        setDataLoaded(true);
+      }
+    };
 
     fetchTotalRevenue();
     fetchLocations();
+    fetchUserActivityCount();
+    fetchTotalSalesPerUnit();
   }, []);
 
   const handleDownload = async () => {
@@ -148,109 +221,109 @@ const Dashboard = () => {
       >
         {/* ROW 1 */}
         <Box
-  gridColumn="span 3"
-  backgroundColor={colors.primary[400]}
-  display="flex"
-  alignItems="center"
-  justifyContent="center"
-  sx={{
-    border: `2px solid ${colors.tealAccent[600]}`,
-    boxShadow: `0 0 10px ${colors.tealAccent[600]}`,
-    '@media (prefers-color-scheme: dark)': {
-      bgcolor: '#18181b', // Equivalent to dark:bg-zinc-900
-    },
-  }}
->
-  <StatBox
-    title="30"
-    subtitle="Team Members"
-    progress="0.75"
-    increase="+14%"
-    icon={
-      <EmailIcon
-        sx={{ color: colors.greenAccent[600], fontSize: "26px" }}
-      />
-    }
-  />
-</Box>
-<Box
-  gridColumn="span 3"
-  backgroundColor={colors.primary[400]}
-  display="flex"
-  alignItems="center"
-  justifyContent="center"
-  sx={{
-    border: `2px solid ${colors.tealAccent[600]}`,
-    boxShadow: `0 0 10px ${colors.tealAccent[600]}`,
-    '@media (prefers-color-scheme: dark)': {
-      bgcolor: '#18181b', // Equivalent to dark:bg-zinc-900
-    },
-  }}
->
-  <StatBox
-    title="431,225"
-    subtitle="Sales Obtained"
-    progress="0.50"
-    increase="+21%"
-    icon={
-      <PointOfSaleIcon
-        sx={{ color: colors.greenAccent[600], fontSize: "26px" }}
-      />
-    }
-  />
-</Box>
-<Box
-  gridColumn="span 3"
-  backgroundColor={colors.primary[400]}
-  display="flex"
-  alignItems="center"
-  justifyContent="center"
-  sx={{
-    border: `2px solid ${colors.purpleAccent[600]}`,
-    boxShadow: `0 0 10px ${colors.purpleAccent[600]}`,
-    '@media (prefers-color-scheme: dark)': {
-      bgcolor: '#18181b', // Equivalent to dark:bg-zinc-900
-    },
-  }}
->
-  <StatBox
-    title="32,441"
-    subtitle="New Clients"
-    progress="0.30"
-    increase="+5%"
-    icon={
-      <PersonAddIcon
-        sx={{ color: colors.greenAccent[600], fontSize: "26px" }}
-      />
-    }
-  />
-</Box>
-<Box
-  gridColumn="span 3"
-  backgroundColor={colors.primary[400]}
-  display="flex"
-  alignItems="center"
-  justifyContent="center"
-  sx={{
-    border: `2px solid ${colors.tealAccent[600]}`,
-    boxShadow: `0 0 10px ${colors.tealAccent[600]}`,
-    '@media (prefers-color-scheme: dark)': {
-      bgcolor: '#18181b', // Equivalent to dark:bg-zinc-900
-    },
-  }}
->
-  <StatBox
-    title="1,325,134"
-    subtitle="Traffic Received"
-    progress="0.80"
-    increase="+43%"
-    icon={
-      <TrafficIcon
-        sx={{ color: colors.greenAccent[600], fontSize: "26px" }}
-      />
-    }
-  />
-</Box>
+          gridColumn="span 3"
+          backgroundColor={colors.primary[400]}
+          display="flex"
+          alignItems="center"
+          justifyContent="center"
+          sx={{
+            border: `2px solid ${colors.tealAccent[600]}`,
+            boxShadow: `0 0 10px ${colors.tealAccent[600]}`,
+            "@media (prefers-color-scheme: dark)": {
+              bgcolor: "#18181b", // Equivalent to dark:bg-zinc-900
+            },
+          }}
+        >
+          <StatBox
+            title={userActivityCount}
+            subtitle="Team Members"
+            progress="0.75"
+            increase="+14%"
+            icon={
+              <EmailIcon
+                sx={{ color: colors.greenAccent[600], fontSize: "26px" }}
+              />
+            }
+          />
+        </Box>
+        <Box
+          gridColumn="span 3"
+          backgroundColor={colors.primary[400]}
+          display="flex"
+          alignItems="center"
+          justifyContent="center"
+          sx={{
+            border: `2px solid ${colors.tealAccent[600]}`,
+            boxShadow: `0 0 10px ${colors.tealAccent[600]}`,
+            "@media (prefers-color-scheme: dark)": {
+              bgcolor: "#18181b", // Equivalent to dark:bg-zinc-900
+            },
+          }}
+        >
+          <StatBox
+            title="1300"
+            subtitle="Sales Obtained"
+            progress="0.50"
+            increase="+21%"
+            icon={
+              <PointOfSaleIcon
+                sx={{ color: colors.greenAccent[600], fontSize: "26px" }}
+              />
+            }
+          />
+        </Box>
+        <Box
+          gridColumn="span 3"
+          backgroundColor={colors.primary[400]}
+          display="flex"
+          alignItems="center"
+          justifyContent="center"
+          sx={{
+            border: `2px solid ${colors.purpleAccent[600]}`,
+            boxShadow: `0 0 10px ${colors.purpleAccent[600]}`,
+            "@media (prefers-color-scheme: dark)": {
+              bgcolor: "#18181b", // Equivalent to dark:bg-zinc-900
+            },
+          }}
+        >
+          <StatBox
+            title="32,441"
+            subtitle="New Clients"
+            progress="0.30"
+            increase="+5%"
+            icon={
+              <PersonAddIcon
+                sx={{ color: colors.greenAccent[600], fontSize: "26px" }}
+              />
+            }
+          />
+        </Box>
+        <Box
+          gridColumn="span 3"
+          backgroundColor={colors.primary[400]}
+          display="flex"
+          alignItems="center"
+          justifyContent="center"
+          sx={{
+            border: `2px solid ${colors.tealAccent[600]}`,
+            boxShadow: `0 0 10px ${colors.tealAccent[600]}`,
+            "@media (prefers-color-scheme: dark)": {
+              bgcolor: "#18181b", // Equivalent to dark:bg-zinc-900
+            },
+          }}
+        >
+          <StatBox
+            title="1,325,134"
+            subtitle="Traffic Received"
+            progress="0.80"
+            increase="+43%"
+            icon={
+              <TrafficIcon
+                sx={{ color: colors.greenAccent[600], fontSize: "26px" }}
+              />
+            }
+          />
+        </Box>
         {/* ROW 2 */}
         <Box
           gridColumn="span 8"
@@ -260,8 +333,8 @@ const Dashboard = () => {
           sx={{
             border: `2px solid ${colors.tealAccent[600]}`,
             boxShadow: `0 0 10px ${colors.tealAccent[600]}`,
-            '@media (prefers-color-scheme: dark)': {
-              bgcolor: '#18181b', // Equivalent to dark:bg-zinc-900
+            "@media (prefers-color-scheme: dark)": {
+              bgcolor: "#18181b", // Equivalent to dark:bg-zinc-900
             },
           }}
         >
@@ -308,8 +381,8 @@ const Dashboard = () => {
           sx={{
             border: `2px solid ${colors.tealAccent[600]}`,
             boxShadow: `0 0 10px ${colors.tealAccent[600]}`,
-            '@media (prefers-color-scheme: dark)': {
-              bgcolor: '#18181b', // Equivalent to dark:bg-zinc-900
+            "@media (prefers-color-scheme: dark)": {
+              bgcolor: "#18181b", // Equivalent to dark:bg-zinc-900
             },
           }}
         >
@@ -371,8 +444,8 @@ const Dashboard = () => {
           sx={{
             border: `2px solid ${colors.tealAccent[600]}`,
             boxShadow: `0 0 10px ${colors.tealAccent[600]}`,
-            '@media (prefers-color-scheme: dark)': {
-              bgcolor: '#18181b', // Equivalent to dark:bg-zinc-900
+            "@media (prefers-color-scheme: dark)": {
+              bgcolor: "#18181b", // Equivalent to dark:bg-zinc-900
             },
           }}
         >
@@ -384,7 +457,6 @@ const Dashboard = () => {
             flexDirection="column"
             alignItems="center"
             mt="25px"
-         
           >
             <ProgressCircle size="125" />
             <Typography
@@ -405,10 +477,9 @@ const Dashboard = () => {
           sx={{
             border: `2px solid ${colors.tealAccent[600]}`,
             boxShadow: `0 0 10px ${colors.tealAccent[600]}`,
-            '@media (prefers-color-scheme: dark)': {
-              bgcolor: '#18181b', // Equivalent to dark:bg-zinc-900
+            "@media (prefers-color-scheme: dark)": {
+              bgcolor: "#18181b", // Equivalent to dark:bg-zinc-900
             },
-            
           }}
         >
           <Typography
@@ -431,8 +502,8 @@ const Dashboard = () => {
           sx={{
             border: `2px solid ${colors.tealAccent[600]}`,
             boxShadow: `0 0 10px ${colors.tealAccent[600]}`,
-            '@media (prefers-color-scheme: dark)': {
-              bgcolor: '#18181b', // Equivalent to dark:bg-zinc-900
+            "@media (prefers-color-scheme: dark)": {
+              bgcolor: "#18181b", // Equivalent to dark:bg-zinc-900
             },
           }}
         >
