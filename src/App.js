@@ -17,6 +17,7 @@ import Calender from "./scenes/calendar/calendar";
 import Login from "./scenes/login/index";
 import AdminList from "./scenes/AdminList";
 import Feedback from "./scenes/feedback";
+import Notifications from "./components/Notification";
 
 function App() {
   const [theme, colorMode] = useMode();
@@ -33,7 +34,9 @@ function App() {
       setLoggedIn(true);
       setUserRole(storedUser.role);
       setSidebarVisible(storedUser.role === "admin");
-      (storedUser.role === "superadmin") ? navigate("/admins") : navigate("/dashboard");
+      storedUser.role === "superadmin"
+        ? navigate("/admins")
+        : navigate("/dashboard");
     }
   }, []);
 
@@ -62,8 +65,12 @@ function App() {
           <main className="content">
             {showTopbar && <Topbar handleLogout={handleLogout} />}
             <Routes>
-              <Route path="/" element={<Login handleLoginSuccess={handleLoginSuccess} />} />
+              <Route
+                path="/"
+                element={<Login handleLoginSuccess={handleLoginSuccess} />}
+              />
               <Route path="/admins" element={<AdminList />} />
+              <Route path="/notifications" element={<Notifications />} />
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/team" element={<Team />} />
               <Route path="/contacts" element={<Contacts />} />
