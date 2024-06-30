@@ -1,9 +1,29 @@
 import { useState, useEffect } from "react";
-import { Box, Button, Dialog, DialogActions, DialogContent, DialogTitle, FormControl, IconButton, InputLabel, TextField } from "@mui/material";
+import {
+  Box,
+  Button,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  FormControl,
+  IconButton,
+  InputLabel,
+  TextField,
+} from "@mui/material";
 import { DataGrid, GridToolbar } from "@mui/x-data-grid";
 import { useTheme } from "@mui/material";
 import { tokens } from "../../theme";
-import { ref, get, set, remove, onChildAdded, onChildChanged, onChildRemoved, off } from "firebase/database";
+import {
+  ref,
+  get,
+  set,
+  remove,
+  onChildAdded,
+  onChildChanged,
+  onChildRemoved,
+  off,
+} from "firebase/database";
 import { auth, database } from "../../firebase";
 import Header from "../../components/Header";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -17,7 +37,12 @@ const AdminList = () => {
   const [admins, setAdmins] = useState([]);
   const [currentUserRole, setCurrentUserRole] = useState(null); // To store the current user's role
   const [openDialog, setOpenDialog] = useState(false);
-  const [formData, setFormData] = useState({ name: "", email: "", password: "", role: "admin" });
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    password: "",
+    role: "admin",
+  });
   const [error, setError] = useState("");
   const navigate = useNavigate();
 
@@ -27,34 +52,38 @@ const AdminList = () => {
       const snapshot = await get(adminsRef);
       if (snapshot.exists()) {
         const users = snapshot.val();
-  
+
         const adminList = Object.keys(users).map((key) => ({
           id: key,
           ...users[key],
         }));
-  
+
         // Fetch feedbacks and merge with admin data
         const feedbackRef = ref(database, "feedback");
         const feedbackSnapshot = await get(feedbackRef);
-        const feedbackData = feedbackSnapshot.exists() ? feedbackSnapshot.val() : {};
-  
+        const feedbackData = feedbackSnapshot.exists()
+          ? feedbackSnapshot.val()
+          : {};
+
         // console.log(feedbackData)
         const adminListWithFeedback = adminList.map((admin) => {
           // console.log(admin.uid)
-          const adminFeedbacks = feedbackData[admin.uid] ? Object.values(feedbackData[admin.uid]) : Object.values(feedbackData[admin.id]);
+          const adminFeedbacks = feedbackData[admin.uid]
+            ? Object.values(feedbackData[admin.uid])
+            : [];
           // console.log(adminFeedbacks)
           // Get the most recent feedback
           const length = adminFeedbacks.length;
           const latestFeedback = length > 0 ? adminFeedbacks[length - 1] : null;
-  
+
           return {
             ...admin,
             feedback: latestFeedback ? latestFeedback.feedback : "No feedback",
           };
         });
-  
+
         setAdmins(adminListWithFeedback);
-  
+
         // Get the current user's ID and role
         const currentUserId = auth.currentUser.uid;
         const usersRef = ref(database, "users");
@@ -77,11 +106,15 @@ const AdminList = () => {
       const data = snapshot.val();
       const feedbackRef = ref(database, `feedback/${data.uid}`);
       const feedbackSnapshot = await get(feedbackRef);
-      const feedbacks = feedbackSnapshot.exists() ? Object.values(feedbackSnapshot.val()) : [];
+      const feedbacks = feedbackSnapshot.exists()
+        ? Object.values(feedbackSnapshot.val())
+        : [];
       const feedbackText = feedbacks.map((fb) => fb.feedback).join(", ");
 
       setAdmins((prevAdmins) => {
-        const existingIndex = prevAdmins.findIndex((item) => item.id === snapshot.key);
+        const existingIndex = prevAdmins.findIndex(
+          (item) => item.id === snapshot.key
+        );
         if (existingIndex !== -1) {
           const updatedAdmins = [...prevAdmins];
           updatedAdmins[existingIndex] = {
@@ -100,12 +133,23 @@ const AdminList = () => {
     };
 
     const handleChildRemoved = (snapshot) => {
-      setAdmins((prevAdmins) => prevAdmins.filter((item) => item.id !== snapshot.key));
+      setAdmins((prevAdmins) =>
+        prevAdmins.filter((item) => item.id !== snapshot.key)
+      );
     };
 
-    const childAddedListener = onChildAdded(adminActivityRef, handleChildAddedOrChanged);
-    const childChangedListener = onChildChanged(adminActivityRef, handleChildAddedOrChanged);
-    const childRemovedListener = onChildRemoved(adminActivityRef, handleChildRemoved);
+    const childAddedListener = onChildAdded(
+      adminActivityRef,
+      handleChildAddedOrChanged
+    );
+    const childChangedListener = onChildChanged(
+      adminActivityRef,
+      handleChildAddedOrChanged
+    );
+    const childRemovedListener = onChildRemoved(
+      adminActivityRef,
+      handleChildRemoved
+    );
 
     return () => {
       off(adminActivityRef, "child_added", childAddedListener);
@@ -142,17 +186,23 @@ const AdminList = () => {
       const usersRef = ref(database, "users");
       const usersSnapshot = await get(usersRef);
       const usersData = usersSnapshot.exists() ? usersSnapshot.val() : {};
-  
+
       // Check if the email is already in use
-      if (Object.values(usersData).some(user => user.email === formData.email)) {
+      if (
+        Object.values(usersData).some((user) => user.email === formData.email)
+      ) {
         setError("Email already in use");
         return;
       }
-  
+
       // Create the user with email and password in Firebase Auth
-      const userCredential = await createUserWithEmailAndPassword(auth, formData.email, formData.password);
+      const userCredential = await createUserWithEmailAndPassword(
+        auth,
+        formData.email,
+        formData.password
+      );
       const user = userCredential.user;
-  
+
       // Add the new admin data to the users ref
       await set(ref(database, `users/${user.uid}`), {
         name: formData.name,
@@ -160,7 +210,7 @@ const AdminList = () => {
         password: formData.password,
         role: formData.role,
       });
-  
+
       // Add the new admin data to the adminActivity ref
       await set(ref(database, `adminActivity/${user.uid}`), {
         name: formData.name,
@@ -168,7 +218,7 @@ const AdminList = () => {
         signInTime: "new",
         feedback: "---",
       });
-  
+
       // Close the dialog and reset the form
       handleDialogClose();
     } catch (error) {
@@ -176,7 +226,6 @@ const AdminList = () => {
       setError("Failed to add admin. Please try again.");
     }
   };
-  
 
   const columns = [
     { field: "id", headerName: "ID", flex: 0.5 },
@@ -190,14 +239,6 @@ const AdminList = () => {
       flex: 1,
       renderCell: (params) => (
         <>
-          <Button
-            variant="contained"
-            color="primary"
-            onClick={() => navigate(`/dashboard`)}
-            sx={{ marginRight: 1 }}
-          >
-            View Profile
-          </Button>
           {currentUserRole === "superadmin" && (
             <>
               <IconButton
@@ -207,14 +248,25 @@ const AdminList = () => {
               >
                 <DeleteIcon />
               </IconButton>
-              <IconButton
-                color="primary"
-                sx={{ color: "#ffffff" }}
-                onClick={() => handleChat(params.id)}
-              >
-                <ChatIcon />
-              </IconButton>
             </>
+          )}
+        </>
+      ),
+    },
+    {
+      field: "chat",
+      headerName: "Chat",
+      flex: 0.5,
+      renderCell: (params) => (
+        <>
+          {currentUserRole === "superadmin" && (
+            <IconButton
+              color="primary"
+              sx={{ color: "#ffffff" }}
+              onClick={() => handleChat(params.id)}
+            >
+              <ChatIcon />
+            </IconButton>
           )}
         </>
       ),
@@ -224,36 +276,40 @@ const AdminList = () => {
   return (
     <Box m="20px">
       <Header title="ADMINS" subtitle="List of Admins" />
-      <Button variant="contained" color="primary" onClick={handleDialogOpen} sx={{
-              display: "inline-flex",
-              height: "48px",
-              alignItems: "center",
-              justifyContent: "center",
-              borderRadius: "8px",
+      <Button
+        variant="contained"
+        color="primary"
+        onClick={handleDialogOpen}
+        sx={{
+          display: "inline-flex",
+          height: "48px",
+          alignItems: "center",
+          justifyContent: "center",
+          borderRadius: "8px",
 
-              border: `2px solid ${colors.tealAccent[600]}`,
-              boxShadow: `0 0 10px ${colors.tealAccent[600]}`,
-              background:
-                "linear-gradient(110deg,#000103 45%,#1e2631 55%,#000103)",
-              backgroundSize: "200% 100%",
-              px: 6,
-              color: "#9CA3AF",
-              fontWeight: "500",
-              textTransform: "none",
-              animation: "shimmer 2s infinite",
-              transition: "color 0.3s",
-              "&:hover": {
-                color: "#FFFFFF",
-              },
-              "&:focus": {
-                outline: "none",
-                boxShadow: "0 0 0 4px rgba(148, 163, 184, 0.6)",
-              },
-              "@keyframes shimmer": {
-                "0%": { backgroundPosition: "200% 0" },
-                "100%": { backgroundPosition: "-200% 0" },
-              },
-            }}>
+          border: `2px solid ${colors.tealAccent[600]}`,
+          boxShadow: `0 0 10px ${colors.tealAccent[600]}`,
+          background: "linear-gradient(110deg,#000103 45%,#1e2631 55%,#000103)",
+          backgroundSize: "200% 100%",
+          px: 6,
+          color: "#9CA3AF",
+          fontWeight: "500",
+          textTransform: "none",
+          animation: "shimmer 2s infinite",
+          transition: "color 0.3s",
+          "&:hover": {
+            color: "#FFFFFF",
+          },
+          "&:focus": {
+            outline: "none",
+            boxShadow: "0 0 0 4px rgba(148, 163, 184, 0.6)",
+          },
+          "@keyframes shimmer": {
+            "0%": { backgroundPosition: "200% 0" },
+            "100%": { backgroundPosition: "-200% 0" },
+          },
+        }}
+      >
         Add Admin
       </Button>
       <Box
@@ -292,14 +348,20 @@ const AdminList = () => {
           rows={admins}
           columns={columns}
           components={{ Toolbar: GridToolbar }}
+          sx={{
+            border: `20px solid ${colors.tealAccent[600]}`,
+            boxShadow: `0 0 10px ${colors.tealAccent[600]}`,
+          }}
         />
       </Box>
       <Dialog open={openDialog} onClose={handleDialogClose}>
-        <DialogTitle sx={{ backgroundColor: "#000000", color: colors.yellowAccent[600] }}>
+        <DialogTitle
+          sx={{ backgroundColor: "#000000", color: colors.yellowAccent[600] }}
+        >
           Add Admin
         </DialogTitle>
         <DialogContent sx={{ backgroundColor: "#000000" }}>
-          {error && <Box sx={{ color: 'red', marginBottom: 2 }}>{error}</Box>}
+          {error && <Box sx={{ color: "red", marginBottom: 2 }}>{error}</Box>}
           <TextField
             margin="dense"
             label="Name"
