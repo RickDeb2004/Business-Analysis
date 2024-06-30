@@ -13,12 +13,13 @@ import FAQ from "./scenes/faq";
 import Geography from "./scenes/geography";
 import { CssBaseline, ThemeProvider } from "@mui/material";
 import { ColorModeContext, useMode } from "./theme";
-import Calender from "./scenes/calendar/calendar";
+import Calendar from "./scenes/calendar/calendar";
 import Login from "./scenes/login/index";
 import AdminList from "./scenes/AdminList";
 import Feedback from "./scenes/feedback";
 import Notifications from "./components/Notification";
-
+ // Import the new page component
+import Page from "./components/Pages";
 function App() {
   const [theme, colorMode] = useMode();
   const [isSidebarVisible, setSidebarVisible] = useState(false);
@@ -34,9 +35,13 @@ function App() {
       setLoggedIn(true);
       setUserRole(storedUser.role);
       setSidebarVisible(storedUser.role === "admin");
-      storedUser.role === "superadmin"
-        ? navigate("/admins")
-        : navigate("/dashboard");
+      if (storedUser.role === "superadmin") {
+        navigate("/admins");
+      } else if (storedUser.role === "user") {
+        navigate("/page");  // Navigate to the new page for "user" role
+      } else {
+        navigate("/dashboard");
+      }
     }
   }, []);
 
@@ -44,7 +49,13 @@ function App() {
     setLoggedIn(true);
     setUserRole(role);
     setSidebarVisible(role === "admin");
-    navigate(role === "superadmin" ? "/admins" : "/dashboard");
+    if (role === "superadmin") {
+      navigate("/admins");
+    } else if (role === "user") {
+      navigate("/page");  // Navigate to the new page for "user" role
+    } else {
+      navigate("/dashboard");
+    }
   };
 
   const handleLogout = () => {
@@ -80,8 +91,9 @@ function App() {
               <Route path="/pie" element={<Pie />} />
               <Route path="/line" element={<Line />} />
               <Route path="/faq" element={<FAQ />} />
-              <Route path="/calendar" element={<Calender />} />
+              <Route path="/calendar" element={<Calendar />} />
               <Route path="/geography" element={<Geography />} />
+              <Route path="/page" element={<Page />} />  {/* Add the new page route */}
             </Routes>
           </main>
         </div>
