@@ -43,6 +43,12 @@ const AdminList = () => {
     password: "",
     role: "admin",
   });
+  const [openChatDialog, setOpenChatDialog] = useState(false);
+const [chatMessage, setChatMessage] = useState("");
+const [selectedAdminId, setSelectedAdminId] = useState(null);
+const [unreadMessagesCount, setUnreadMessagesCount] = useState(0);
+const [messages, setMessages] = useState([]);
+
   const [error, setError] = useState("");
   const navigate = useNavigate();
 
@@ -168,7 +174,9 @@ const AdminList = () => {
   };
 
   const handleChat = (id) => {
-    navigate(`/chat/${id}`);
+    setSelectedAdminId(id);
+  setOpenChatDialog(true);
+
   };
 
   const handleDialogOpen = () => {
@@ -272,7 +280,22 @@ const AdminList = () => {
       ),
     },
   ];
-
+  const handleSendMessage = async () => {
+    if (chatMessage.trim() === "") return;
+  
+    const newMessageRef = ref(
+      database,
+      `messages/${selectedAdminId}/${Date.now()}`
+    );
+    await set(newMessageRef, {
+      message: chatMessage,
+      timestamp: Date.now(),
+      sender: "superadmin",
+    });
+  
+    setChatMessage("");
+    setOpenChatDialog(false);
+  };
   return (
     <Box m="20px">
       <Header title="ADMINS" subtitle="List of Admins" />
@@ -442,6 +465,39 @@ const AdminList = () => {
           </Button>
         </DialogActions>
       </Dialog>
+      <Dialog open={openChatDialog} onClose={() => setOpenChatDialog(false)}>
+  <DialogTitle
+    sx={{ backgroundColor: "#000000", color: colors.yellowAccent[600] }}
+  >
+    Send Message
+  </DialogTitle>
+  <DialogContent sx={{ backgroundColor: "#000000" }}>
+    <TextField
+      margin="dense"
+      label="Message"
+      fullWidth
+      variant="outlined"
+      value={chatMessage}
+      onChange={(e) => setChatMessage(e.target.value)}
+      sx={{
+        marginBottom: "10px",
+        boxShadow:
+          "0px 2px 3px -1px rgba(0,0,0,0.1), 0px 1px 0px 0px rgba(25,28,33,0.02), 0px 0px 0px 1px rgba(25,28,33,0.08)",
+        "&:hover": {
+          boxShadow: "0px 0px 8px 2px rgba(33,150,243,0.5)",
+        },
+      }}
+    />
+  </DialogContent>
+  <DialogActions sx={{ backgroundColor: "#000000" }}>
+    <Button onClick={() => setOpenChatDialog(false)} color="secondary">
+      Cancel
+    </Button>
+    <Button onClick={handleSendMessage} color="info">
+      Send
+    </Button>
+  </DialogActions>
+</Dialog>
     </Box>
   );
 };
