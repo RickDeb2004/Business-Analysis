@@ -3,20 +3,23 @@ import React, { useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useTheme, Card, CardContent, Typography, Box } from '@mui/material';
 import { Link } from 'react-router-dom';
+import { tokens } from '../theme';
 
 const HoverEffect = ({ items }) => {
   const [hoveredIndex, setHoveredIndex] = useState(null);
   const theme = useTheme();
-  const colors = theme.palette;
+  const colors = tokens(theme.palette.mode);
 
   return (
     <Box
       sx={{
-        backgroundColor: colors.background.default,
+        backgroundColor: colors.backgroundColor,
         p: 4,
         display: 'grid',
         gridTemplateColumns: { xs: '1fr', md: 'repeat(2, 1fr)', lg: 'repeat(3, 1fr)' },
         gap: 4,
+        border: `2px solid ${colors.tealAccent[600]}`,
+             boxShadow: `0 0 10px ${colors.tealAccent[600]}`,
       }}
     >
       {items.map((item, idx) => (
