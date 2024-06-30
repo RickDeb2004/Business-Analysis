@@ -1,5 +1,5 @@
 import { Box, Button, TextField, Autocomplete, useTheme } from "@mui/material";
-import { Formik, FieldArray } from "formik";
+import { Formik, FieldArray, useFormikContext } from "formik";
 import * as yup from "yup";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import Header from "../../components/Header";
@@ -8,12 +8,23 @@ import { get, getDatabase, ref, set } from "firebase/database";
 import { useEffect, useState } from "react";
 import { database } from "../../firebase";
 import { tokens } from "../../theme";
+import SubmissionList from "./Data";
 
 const Form = () => {
   const theme = useTheme();
   const [data, setData] = useState([]);
+  const [formSubmissions, setFormSubmissions] = useState([]);
+  const [editIndex, setEditIndex] = useState(null); // Track edit index
+  const [initialValues, setInitialValues] = useState({
+    companyName: "",
+    email: "",
+    salesPerMonth: [{ month: "", amount: "", country: "" }],
+    uniqueSellingProducts: [{ product: "", country: "" }],
+    salesPerUnit: [{ country: "", unitSales: "" }],
+    locations: [""],
+  });
+
   const isNonMobile = useMediaQuery("(min-width:600px)");
-  // console.log(countryData);
   const colors = tokens(theme.palette.mode);
 
   const handleFormSubmit = (values) => {
@@ -22,6 +33,17 @@ const Form = () => {
     const user = auth.currentUser;
 
     if (user) {
+      if (editIndex !== null) {
+        setFormSubmissions((prev) => {
+          const updatedSubmissions = [...prev];
+          updatedSubmissions[editIndex] = values;
+          return updatedSubmissions;
+        });
+        setEditIndex(null);
+      } else {
+        setFormSubmissions((prev) => [...prev, values]);
+      }
+
       set(ref(database, "users/" + user.uid + "/formData"), values)
         .then(() => {
           console.log("Data saved successfully!");
@@ -30,16 +52,24 @@ const Form = () => {
           console.error("Error saving data:", error);
         });
     }
+
+    //clear form
+    setInitialValues({
+      companyName: "",
+      email: "",
+      salesPerMonth: [{ month: "", amount: "", country: "" }],
+      uniqueSellingProducts: [{ product: "", country: "" }],
+      salesPerUnit: [{ country: "", unitSales: "" }],
+      locations: [""],
+    });
   };
 
   useEffect(() => {
     const fetchCountrydata = async () => {
       try {
-        // Fetch locations data from Firebase Realtime Database
         const snapshot = await get(ref(database, "countryData"));
         const data = snapshot.val();
         setData(data);
-        // console.log(data);
       } catch (err) {
         console.log(err);
       }
@@ -48,6 +78,40 @@ const Form = () => {
     fetchCountrydata();
   }, []);
 
+  useEffect(() => {
+    const auth = getAuth();
+    const database = getDatabase();
+    const user = auth.currentUser;
+
+    if (user) {
+      const userRef = ref(database, "users/" + user.uid + "/formData");
+      get(userRef)
+        .then((snapshot) => {
+          if (snapshot.exists()) {
+            const data = snapshot.val();
+            setFormSubmissions((prev) => [...prev, data]);
+          } else {
+            console.log("No data available");
+          }
+        })
+        .catch((error) => {
+          console.error("Error fetching data:", error);
+        });
+    }
+  }, []);
+
+  const handleEditForm = (existingFormData, index) => {
+    // move to top of the form
+    window.scrollTo(0, 0);
+    setFormSubmissions((prev) => {
+      const updatedSubmissions = [...prev];
+      updatedSubmissions.splice(index, 1);
+      return updatedSubmissions;
+    });
+    setEditIndex(index);
+    setInitialValues(existingFormData);
+  };
+
   return (
     <Box m="20px">
       <Header title="CREATE USER" subtitle="Create a New User Profile" />
@@ -55,6 +119,7 @@ const Form = () => {
         onSubmit={handleFormSubmit}
         initialValues={initialValues}
         validationSchema={checkoutSchema}
+        enableReinitialize // Add this to reinitialize form with initialValues
       >
         {({
           values,
@@ -63,6 +128,7 @@ const Form = () => {
           handleBlur,
           handleChange,
           handleSubmit,
+          setValues, // Add setValues here to update form values
         }) => (
           <form onSubmit={handleSubmit}>
             <Box
@@ -776,6 +842,10 @@ const Form = () => {
           </form>
         )}
       </Formik>
+      <SubmissionList
+        formSubmissions={formSubmissions}
+        handleEditForm={handleEditForm}
+      />
     </Box>
   );
 };
