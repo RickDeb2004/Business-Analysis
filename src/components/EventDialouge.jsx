@@ -20,11 +20,11 @@ const EventDialog = ({ open, onClose, onSave }) => {
     setTitle("");
   };
   const lampEffectStyle = {
-    position: "relative",
+    position: "absolute",
     background: "linear-gradient(to top, #00bfff, transparent)",
     "&::after": {
       content: '""',
-      position: "absolute",
+      position: "relative",
       left: 0,
 
       width: "100%",
