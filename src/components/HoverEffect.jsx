@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import Link from 'next/link';
+
 import { AnimatePresence, motion } from 'framer-motion';
 import { useTheme, Card, CardContent, Typography, Box } from '@mui/material';
+import { Link } from 'react-router-dom';
 
 const HoverEffect = ({ items }) => {
   const [hoveredIndex, setHoveredIndex] = useState(null);
