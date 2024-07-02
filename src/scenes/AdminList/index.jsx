@@ -266,6 +266,7 @@ const AdminList = () => {
             color="primary"
             sx={{ color: "#ffffff" }}
             onClick={() => handleChat(params.id)}
+            
           >
             <ChatIcon />
           </IconButton>
