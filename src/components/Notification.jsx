@@ -1,97 +1,127 @@
-import React, { useEffect, useState } from "react";
-import {
-  Box,
-  Typography,
-  Card,
-  CardContent,
-  Grid,
-  IconButton,
-  useTheme,
-} from "@mui/material";
-import { Delete as DeleteIcon } from "@mui/icons-material";
-import { database } from "../firebase";
-import { ref, get, remove } from "firebase/database";
-import { tokens } from "../theme";
+import React, { useEffect, useState } from 'react';
+import { socket } from './socket'; // Adjust the path to where your socket.js is located
+import { Avatar, Box, Button, Input, Typography } from '@mui/material';
+import { useTheme } from '@mui/system';
+import { Send, Phone, VideoCall, MoreHoriz } from '@mui/icons-material';
+import { tokens } from '../theme';
 
-const Notifications = () => {
+const ChatComponent = () => {
   const [messages, setMessages] = useState([]);
+  const [message, setMessage] = useState('');
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
 
   useEffect(() => {
-    const fetchMessages = async () => {
-      const messagesRef = ref(database, "messages");
-      const snapshot = await get(messagesRef);
-      if (snapshot.exists()) {
-        const messagesData = snapshot.val();
-        const allMessages = Object.entries(messagesData).flatMap(
-          ([userId, userMessages]) =>
-            Object.entries(userMessages).map(([msgId, message]) => ({
-              ...message,
-              msgId,
-              userId,
-            }))
-        );
-        setMessages(allMessages);
-      }
-    };
+    socket.on('message', (message) => {
+      setMessages((prevMessages) => [...prevMessages, message]);
+    });
 
-    fetchMessages();
+    return () => {
+      socket.off('message');
+    };
   }, []);
 
-  const handleDelete = async (userId, msgId) => {
-    const messageRef = ref(database, `messages/${userId}/${msgId}`);
-    try {
-      await remove(messageRef);
-      setMessages((prevMessages) =>
-        prevMessages.filter((msg) => msg.msgId !== msgId)
-      );
-    } catch (error) {
-      console.error("Error deleting message:", error);
+  const sendMessage = (e) => {
+    e.preventDefault();
+    if (message) {
+      socket.emit('message', message);
+      setMessage('');
     }
   };
 
   return (
-    <Box p={2}>
-      <Typography variant="h1" gutterBottom>
-        Notifications
-      </Typography>
-      <Grid container spacing={2}>
+    <Box
+      sx={{
+        display: 'flex',
+        flexDirection: 'column',
+        height: '100vh',
+        borderRadius: 2,
+        border: `1px solid ${theme.palette.divider}`,
+        bgcolor: theme.palette.background.paper,
+      }}
+    >
+      <Box
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          borderBottom: `1px solid ${theme.palette.divider}`,
+          p: 2,
+        }}
+      >
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+          <Avatar src="/placeholder-user.jpg" />
+          <Box>
+            <Typography variant="subtitle1">John Doe</Typography>
+            <Typography variant="caption" color="textSecondary">
+              Online
+            </Typography>
+          </Box>
+        </Box>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <Button variant="outlined" size="small">
+            <Phone fontSize="small" />
+          </Button>
+          <Button variant="outlined" size="small">
+            <VideoCall fontSize="small" />
+          </Button>
+          <Button variant="outlined" size="small">
+            <MoreHoriz fontSize="small" />
+          </Button>
+        </Box>
+      </Box>
+      <Box
+        sx={{
+          flex: 1,
+          overflowY: 'auto',
+          p: 2,
+        }}
+      >
         {messages.map((msg, index) => (
-          <Grid item xs={12} md={6} lg={4} key={index}>
-            <Card
-              sx={{
-                boxShadow: `0 0 10px ${colors.tealAccent[600]}`,
-                border: `2px solid ${colors.tealAccent[600]}`,
-              }}
-            >
-              <CardContent>
-                <Box display="flex" justifyContent="space-between">
-                  <Box>
-                    <Typography variant="body1" component="p">
-                      {msg.message}
-                    </Typography>
-                    <Typography variant="body2" color="textSecondary">
-                      Sent by: {msg.sender}
-                    </Typography>
-                    <Typography variant="body2" color="textSecondary">
-                      {new Date(msg.timestamp).toLocaleString()}
-                    </Typography>
-                  </Box>
-                  <IconButton
-                    color={colors.redAccent[600]}
-                    onClick={() => handleDelete(msg.userId, msg.msgId)}
-                  >
-                    <DeleteIcon />
-                  </IconButton>
-                </Box>
-              </CardContent>
-            </Card>
-          </Grid>
+          <Box
+            key={index}
+            sx={{
+              display: 'flex',
+              flexDirection: 'column',
+              maxWidth: '65%',
+              bgcolor: index % 2 === 0 ? 'grey.300' : 'primary.main',
+              color: index % 2 === 0 ? 'text.primary' : 'primary.contrastText',
+              p: 1.5,
+              borderRadius: 2,
+              alignSelf: index % 2 === 0 ? 'flex-start' : 'flex-end',
+              mb: 1,
+            }}
+          >
+            <Typography variant="body2">{msg}</Typography>
+            <Typography variant="caption" sx={{ alignSelf: 'flex-end' }}>
+              {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+            </Typography>
+          </Box>
         ))}
-      </Grid>
+      </Box>
+      <Box
+        component="form"
+        onSubmit={sendMessage}
+        sx={{
+          borderTop: `1px solid ${theme.palette.divider}`,
+          display: 'flex',
+          alignItems: 'center',
+          p: 2,
+        }}
+      >
+        <Input
+          value={message}
+          onChange={(e) => setMessage(e.target.value)}
+          placeholder="Type your message..."
+          sx={{ flex: 1, mr: 1 }}
+          autoComplete="off"
+        />
+        <Button type="submit" variant="contained" color="primary">
+          <Send />
+        </Button>
+      </Box>
     </Box>
   );
 };
 
-export default Notifications;
+export default ChatComponent;

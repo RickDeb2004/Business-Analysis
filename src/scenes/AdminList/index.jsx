@@ -212,6 +212,7 @@ const [messages, setMessages] = useState([]);
       const user = userCredential.user;
 
       // Add the new admin data to the users ref
+      //Admin uid
       await set(ref(database, `users/${user.uid}`), {
         name: formData.name,
         email: formData.email,
