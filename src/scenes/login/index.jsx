@@ -12,11 +12,9 @@ const Login = ({ handleLoginSuccess }) => {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
 
-
-
   const handleLogin = async () => {
     try {
-      
+      // Sign in with email and password
       const userCredential = await signInWithEmailAndPassword(
         auth,
         email,
@@ -24,84 +22,64 @@ const Login = ({ handleLoginSuccess }) => {
       );
       const user = userCredential.user;
 
-      // Check user role from the database
-      const userRoleRef = ref(database, "users/" + user.uid + "/role");
-      const snapshot = await get(userRoleRef);
+      // Fetch the role from the rolemail node
+      const roleMailRef = ref(database, "rolemail");
+      console.log("roleMailRef", roleMailRef);
+      const roleMailSnapshot = await get(roleMailRef);
+      console.log("RoleMailSnapshot:", roleMailSnapshot);
 
-      if (snapshot.exists()) {
-        const role = snapshot.val();
+      if (roleMailSnapshot.exists()) {
+        const roleMailData = roleMailSnapshot.val();
+        console.log("RoleMailData:", roleMailData);
+        const userEntry = Object.entries(roleMailData).find(
+          ([key, value]) => value.email === email
+        );
+        console.log("UserEntry:", userEntry);
 
-        // Get user name
-        const userNameRef = ref(database, "users/" + user.uid + "/name");
-        const userNameSnapshot = await get(userNameRef);
-        const userName = userNameSnapshot.exists()
-          ? userNameSnapshot.val()
-          : "Unknown User";
+        if (userEntry) {
+          const [userId, userInfo] = userEntry;
+          const { role } = userInfo;
+          console.log("Role:", role);
 
-        // Record the sign-in activity
-        // Record the sign-in activity
-        if (role === "user" || role === "admin") {
-          const activityRef = ref(database, `${role}Activity`);
-
-          // Fetch existing activities
-          const existingActivitiesSnapshot = await get(activityRef);
-          let existingActivityKey = null;
-
-          if (existingActivitiesSnapshot.exists()) {
-            const activities = existingActivitiesSnapshot.val();
-            for (const [key, activity] of Object.entries(activities)) {
-              if (activity.email === user.email) {
-                existingActivityKey = key;
-                break;
+          if (role === "admin") {
+            // For admin, check the password in the admins node
+            const adminRef = ref(database, "admins/" + userId);
+            const adminSnapshot = await get(adminRef);
+            if (adminSnapshot.exists()) {
+              const adminData = adminSnapshot.val();
+              if (adminData.password === password) {
+                // Admin authenticated successfully
+                handleLoginSuccess(role);
+                // Store user information in localStorage
+                localStorage.setItem(
+                  "user",
+                  JSON.stringify({ uid: userId, role })
+                );
+                return;
+              } else {
+                setError("Invalid admin credentials");
+                return;
               }
+            } else {
+              setError("Admin not found");
+              return;
             }
-          }
-
-          const now = new Date();
-          const hours = now.getHours().toString().padStart(2, "0");
-          const minutes = now.getMinutes().toString().padStart(2, "0");
-          const time = `${hours}:${minutes}`;
-          const day = now.getDate().toString().padStart(2, "0");
-          const month = (now.getMonth() + 1).toString().padStart(2, "0");
-          const year = now.getFullYear().toString().slice(-2);
-          const date = `${day}/${month}/${year}`;
-          const formattedTime = `${time} - ${date}`;
-
-          if (existingActivityKey) {
-            // Update existing activity
-            const existingActivityRef = ref(
-              database,
-              `${role}Activity/${existingActivityKey}`
-            );
-            await update(existingActivityRef, {
-              signInTime: formattedTime,
-            });
           } else {
-            // Push new activity
-            const newActivityRef = push(activityRef);
-            await set(newActivityRef, {
-              uid: user.uid,
-              name: userName,
-              email: user.email,
-              role: role,
-              signInTime: formattedTime,
-            });
+            setError("Not an admin account");
+            return;
           }
+        } else {
+          setError("Email not found");
+          return;
         }
-
-        // Store user information in localStorage
-        localStorage.setItem("user", JSON.stringify({ uid: user.uid, role }));
-
-        handleLoginSuccess(role);
-        // navigate("/dashboard");
       } else {
-        setError("Invalid credentials");
+        setError("No role data found");
+        return;
       }
     } catch (error) {
       setError(error.message);
     }
   };
-
   const lampEffectStyle = {
     position: "relative",
     background: "black",
