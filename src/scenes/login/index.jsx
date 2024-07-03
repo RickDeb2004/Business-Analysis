@@ -11,6 +11,7 @@ const Login = ({ handleLoginSuccess }) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [userUID, setUserUID] = useState("");
 
   const handleLogin = async () => {
     try {
@@ -24,9 +25,10 @@ const Login = ({ handleLoginSuccess }) => {
 
       // Fetch the role from the rolemail node
       const roleMailRef = ref(database, "rolemail");
+
       const roleMailSnapshot = await get(roleMailRef);
-      console.log("roleMailRef",roleMailRef);
-      console.log("roleMailSnapshot",roleMailSnapshot);
+      console.log("roleMailRef", roleMailRef);
+      console.log("roleMailSnapshot", roleMailSnapshot);
 
       if (roleMailSnapshot.exists()) {
         const roleMailData = roleMailSnapshot.val();
@@ -37,17 +39,17 @@ const Login = ({ handleLoginSuccess }) => {
         if (userEntry) {
           const [userId, userInfo] = userEntry;
           const { role } = userInfo;
-          console.log("userentry",userEntry,userInfo);
+          console.log("userentry", userEntry, userInfo);
 
           if (role === "superadmin") {
             // Fetch the user details from the users database for superadmin
             const userRef = ref(database, "users/" + userId);
-            console.log("userref",userRef);
+            console.log("userref", userRef);
             const userSnapshot = await get(userRef);
-            console.log("usersnapshot",userSnapshot);
+            console.log("usersnapshot", userSnapshot);
             if (userSnapshot.exists()) {
               const userData = userSnapshot.val();
-              console.log("userdata",userData);
+              console.log("userdata", userData);
               if (userData.password === password) {
                 // Superadmin authenticated successfully
                 handleLoginSuccess(role);
@@ -88,8 +90,38 @@ const Login = ({ handleLoginSuccess }) => {
               setError("Admin not found");
               return;
             }
+          } else if (role === "user") {
+            // For admin, check the password in the admins node
+            const useridSplit = userId.split("_")[0];
+            console.log("useridSplit", useridSplit);
+            const useRef = ref(
+              database,
+              "userList/" + useridSplit + "/" + userId
+            );
+
+            const useSnapshot = await get(useRef);
+            console.log("useSnapshot", useSnapshot);
+            if (useSnapshot.exists()) {
+              const useData = useSnapshot.val();
+              if (useData.password === password) {
+                // Admin authenticated successfully
+                handleLoginSuccess(role);
+                // Store user information in localStorage
+                localStorage.setItem(
+                  "user",
+                  JSON.stringify({ uid: userId, role })
+                );
+                return;
+              } else {
+                setError("Invalid user credentials");
+                return;
+              }
+            } else {
+              setError("user not found");
+              return;
+            }
           } else {
-            setError("Not an admin or superadmin account");
+            setError("Not an admin or superadmin or user account");
             return;
           }
         } else {
