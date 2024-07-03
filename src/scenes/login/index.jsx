@@ -103,6 +103,13 @@ const Login = ({ handleLoginSuccess }) => {
             console.log("useSnapshot", useSnapshot);
             if (useSnapshot.exists()) {
               const useData = useSnapshot.val();
+              if (useData.blocked) {
+                await auth.signOut();
+                setError(
+                  "Your account has been blocked. Please contact support."
+                );
+                return;
+              }
               if (useData.password === password) {
                 // Admin authenticated successfully
                 handleLoginSuccess(role);
