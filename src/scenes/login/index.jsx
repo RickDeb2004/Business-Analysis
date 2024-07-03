@@ -24,24 +24,48 @@ const Login = ({ handleLoginSuccess }) => {
 
       // Fetch the role from the rolemail node
       const roleMailRef = ref(database, "rolemail");
-      console.log("roleMailRef", roleMailRef);
       const roleMailSnapshot = await get(roleMailRef);
-      console.log("RoleMailSnapshot:", roleMailSnapshot);
+      console.log("roleMailRef",roleMailRef);
+      console.log("roleMailSnapshot",roleMailSnapshot);
 
       if (roleMailSnapshot.exists()) {
         const roleMailData = roleMailSnapshot.val();
-        console.log("RoleMailData:", roleMailData);
         const userEntry = Object.entries(roleMailData).find(
           ([key, value]) => value.email === email
         );
-        console.log("UserEntry:", userEntry);
 
         if (userEntry) {
           const [userId, userInfo] = userEntry;
           const { role } = userInfo;
-          console.log("Role:", role);
+          console.log("userentry",userEntry,userInfo);
 
-          if (role === "admin") {
+          if (role === "superadmin") {
+            // Fetch the user details from the users database for superadmin
+            const userRef = ref(database, "users/" + userId);
+            console.log("userref",userRef);
+            const userSnapshot = await get(userRef);
+            console.log("usersnapshot",userSnapshot);
+            if (userSnapshot.exists()) {
+              const userData = userSnapshot.val();
+              console.log("userdata",userData);
+              if (userData.password === password) {
+                // Superadmin authenticated successfully
+                handleLoginSuccess(role);
+                // Store user information in localStorage
+                localStorage.setItem(
+                  "user",
+                  JSON.stringify({ uid: userId, role })
+                );
+                return;
+              } else {
+                setError("Invalid superadmin credentials");
+                return;
+              }
+            } else {
+              setError("Superadmin not found");
+              return;
+            }
+          } else if (role === "admin") {
             // For admin, check the password in the admins node
             const adminRef = ref(database, "admins/" + userId);
             const adminSnapshot = await get(adminRef);
@@ -65,7 +89,7 @@ const Login = ({ handleLoginSuccess }) => {
               return;
             }
           } else {
-            setError("Not an admin account");
+            setError("Not an admin or superadmin account");
             return;
           }
         } else {
