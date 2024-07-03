@@ -44,7 +44,7 @@ const Form = () => {
         setFormSubmissions((prev) => [...prev, values]);
       }
 
-      set(ref(database, "users/" + user.uid + "/formData"), values)
+      set(ref(database, "admins/" + user.uid + "/formData"), values)
         .then(() => {
           console.log("Data saved successfully!");
         })
@@ -84,7 +84,7 @@ const Form = () => {
     const user = auth.currentUser;
 
     if (user) {
-      const userRef = ref(database, "users/" + user.uid + "/formData");
+      const userRef = ref(database, "admins/" + user.uid + "/formData");
       get(userRef)
         .then((snapshot) => {
           if (snapshot.exists()) {
