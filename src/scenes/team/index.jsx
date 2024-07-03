@@ -48,21 +48,28 @@ const Team = () => {
     role: "user",
   });
   const [currentUserRole, setCurrentUserRole] = useState(null);
+  const [adminName, setAdminName] = useState("");
+  const [adminID, setAdminID] = useState("");
 
   const user = auth.currentUser;
 
-  // fetch userRole from the database
+  // Fetch userRole and admin name from the database
   useEffect(() => {
     if (user) {
-      const userRoleRef = ref(database, "users/" + user.uid + "/role");
-      const getUserRole = async () => {
-        const snapshot = await get(userRoleRef);
-        if (snapshot.exists()) {
-          setCurrentUserRole(snapshot.val());
-          console.log(snapshot.val());
+      const adminRef = ref(database, "admins/" + user.uid);
+
+      const getAdminData = async () => {
+        const adminSnapshot = await get(adminRef);
+
+        if (adminSnapshot.exists()) {
+          const adminData = adminSnapshot.val();
+          setCurrentUserRole(adminData.role);
+          setAdminName(adminData.name);
+          setAdminID(user.uid);
         }
       };
-      getUserRole();
+
+      getAdminData();
     }
   }, [user]);
 
@@ -128,82 +135,82 @@ const Team = () => {
     },
   ];
 
-  if (currentUserRole === "admin") {
-    columns.push({
-      field: "blocked",
-      headerName: "Blocked",
-      flex: 1,
-      renderCell: ({ row }) => (
-        <Button
-          onClick={() => handleBlockUser(row.id, !row.blocked)}
-          sx={{ color: row.blocked ? "green" : "red" }}
-        >
-          {row.blocked ? "Unblock" : "Block"}
-        </Button>
-      ),
-    });
-    columns.push({
-      field: "actions",
-      headerName: "Actions",
-      flex: 1,
-      renderCell: ({ row }) => (
-        <Button
-          onClick={() => handleEditUser(row)}
-          sx={{ color: colors.grey[100] }}
-        >
-          Edit
-        </Button>
-      ),
-    });
-  }
+  columns.push({
+    field: "blocked",
+    headerName: "Blocked",
+    flex: 1,
+    renderCell: ({ row }) => (
+      <Button
+        onClick={() => handleBlockUser(row.id, !row.blocked)}
+        sx={{ color: row.blocked ? "green" : "red" }}
+      >
+        {row.blocked ? "Unblock" : "Block"}
+      </Button>
+    ),
+  });
+  columns.push({
+    field: "actions",
+    headerName: "Actions",
+    flex: 1,
+    renderCell: ({ row }) => (
+      <Button
+        onClick={() => handleEditUser(row)}
+        sx={{ color: colors.grey[100] }}
+      >
+        Edit
+      </Button>
+    ),
+  });
 
   useEffect(() => {
-    const userActivityRef = ref(database, "userActivity");
+    if (adminID) {
+      const userListRef = ref(database, `userList/${adminID}`);
 
-    const handleChildAddedOrChanged = (snapshot) => {
-      const data = snapshot.val();
-      setUserData((prevUserData) => {
-        const existingIndex = prevUserData.findIndex(
-          (item) => item.id === snapshot.key
+      const handleChildAddedOrChanged = (snapshot) => {
+        const data = snapshot.val();
+        setUserData((prevUserData) => {
+          const existingIndex = prevUserData.findIndex(
+            (item) => item.id === snapshot.key
+          );
+          if (existingIndex !== -1) {
+            const updatedUserData = [...prevUserData];
+            updatedUserData[existingIndex] = { id: snapshot.key, ...data };
+            return updatedUserData;
+          } else {
+            return [...prevUserData, { id: snapshot.key, ...data }];
+          }
+        });
+      };
+
+      const handleChildRemoved = (snapshot) => {
+        setUserData((prevUserData) =>
+          prevUserData.filter((item) => item.id !== snapshot.key)
         );
-        if (existingIndex !== -1) {
-          const updatedUserData = [...prevUserData];
-          updatedUserData[existingIndex] = { id: snapshot.key, ...data };
-          return updatedUserData;
-        } else {
-          return [...prevUserData, { id: snapshot.key, ...data }];
-        }
-      });
-    };
+      };
 
-    const handleChildRemoved = (snapshot) => {
-      setUserData((prevUserData) =>
-        prevUserData.filter((item) => item.id !== snapshot.key)
+      const childAddedListener = onChildAdded(
+        userListRef,
+        handleChildAddedOrChanged
       );
-    };
+      const childChangedListener = onChildChanged(
+        userListRef,
+        handleChildAddedOrChanged
+      );
+      const childRemovedListener = onChildRemoved(
+        userListRef,
+        handleChildRemoved
+      );
 
-    const childAddedListener = onChildAdded(
-      userActivityRef,
-      handleChildAddedOrChanged
-    );
-    const childChangedListener = onChildChanged(
-      userActivityRef,
-      handleChildAddedOrChanged
-    );
-    const childRemovedListener = onChildRemoved(
-      userActivityRef,
-      handleChildRemoved
-    );
-
-    return () => {
-      off(userActivityRef, "child_added", childAddedListener);
-      off(userActivityRef, "child_changed", childChangedListener);
-      off(userActivityRef, "child_removed", childRemovedListener);
-    };
-  }, []);
+      return () => {
+        off(userListRef, "child_added", childAddedListener);
+        off(userListRef, "child_changed", childChangedListener);
+        off(userListRef, "child_removed", childRemovedListener);
+      };
+    }
+  }, [adminID]);
 
   const handleBlockUser = async (userId, blockStatus) => {
-    const userRef = ref(database, `userActivity/${userId}`);
+    const userRef = ref(database, `userList/${adminID}/${userId}`);
     await update(userRef, { blocked: blockStatus });
   };
 
@@ -225,36 +232,35 @@ const Team = () => {
   };
 
   const handleFormSubmit = async () => {
-    if (selectedUser) {
-      // Updating an existing user
-      const userRef = ref(database, `userActivity/${selectedUser.id}`);
-      const updates = { ...formData };
-      if (!formData.password) delete updates.password; // Do not update password if it's empty
-      await update(userRef, updates);
+    const userId = selectedUser ? selectedUser.id : `${adminID}_${uuidv4()}`;
 
-      const userRefUsers = ref(database, `users/${selectedUser.id}`);
-      await update(userRefUsers, updates);
+    const userRef = ref(database, `userList/${adminID}/${userId}`);
+    const roleMailRef = ref(database, `rolemail/${userId}`);
+
+    const userData = {
+      ...formData,
+      signInTime: new Date().toISOString(),
+      blocked: false,
+    };
+
+    if (selectedUser) {
+      if (!formData.password) delete userData.password; // Do not update password if it's empty
+      await update(userRef, userData);
+      await update(roleMailRef, {
+        email: formData.email,
+        role: formData.role,
+      });
     } else {
-      // Adding a new user
       try {
-        const userCredential = await createUserWithEmailAndPassword(
+        await createUserWithEmailAndPassword(
           auth,
           formData.email,
           formData.password
         );
-        const newUser = userCredential.user;
-        const userRef = ref(database, `userActivity/${newUser.uid}`);
-        await set(userRef, {
-          ...formData,
-          signInTime: new Date().toISOString(),
-          blocked: false,
-        });
-
-        const userRefUsers = ref(database, `users/${newUser.uid}`);
-        await set(userRefUsers, {
-          ...formData,
-          signInTime: new Date().toISOString(),
-          blocked: false,
+        await set(userRef, userData);
+        await set(roleMailRef, {
+          email: formData.email,
+          role: formData.role,
         });
       } catch (error) {
         console.error("Error adding new user:", error);
@@ -262,17 +268,18 @@ const Team = () => {
     }
     handleDialogClose();
   };
-  const handleConfirmDelete = async (users) => {
+
+  const handleConfirmDelete = async (user) => {
     try {
-      const userActivityRef = ref(database, `userActivity/${users.id}`);
-      await remove(userActivityRef);
-      const userRef = ref(database, `users/${user.id}`);
+      const userRef = ref(database, `userList/${adminID}/${user.id}`);
+      const roleMailRef = ref(database, `rolemail/${user.id}`);
       await remove(userRef);
+      await remove(roleMailRef);
       setUserData((prevUserData) =>
-        prevUserData.filter((user) => user.id !== users.id)
+        prevUserData.filter((u) => u.id !== user.id)
       );
     } catch (error) {
-      console.error("Error deleting contact:", error);
+      console.error("Error deleting user:", error);
     }
   };
   const lampEffectStyle = {
