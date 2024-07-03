@@ -35,7 +35,7 @@ const Dashboard = () => {
       const db = getDatabase();
       const dataRef = ref(
         db,
-        `users/${auth.currentUser.uid}/formData/salesPerMonth`
+        `admins/${auth.currentUser.uid}/formData/salesPerMonth`
       );
       const snapshot = await get(dataRef);
 
@@ -61,7 +61,7 @@ const Dashboard = () => {
         const db = database;
         const dataRef = ref(
           db,
-          `users/${auth.currentUser.uid}/formData/salesPerUnit`
+          `admins/${auth.currentUser.uid}/formData/salesPerUnit`
         );
         const snapshot = await get(dataRef);
 
@@ -80,7 +80,7 @@ const Dashboard = () => {
         return;
       }
       const db = getDatabase();
-      const dataRef = ref(db, `userActivity`);
+      const dataRef = ref(db, `userList/${auth.currentUser.uid}`);
       const snapshot = await get(dataRef);
 
       if (snapshot.exists()) {
@@ -96,11 +96,11 @@ const Dashboard = () => {
         const db = getDatabase();
         const salesPerUnitRef = ref(
           db,
-          `users/${auth.currentUser.uid}/formData/salesPerUnit`
+          `admins/${auth.currentUser.uid}/formData/salesPerUnit`
         );
         console.log(
           "Fetching data from path:",
-          `users/${auth.currentUser.uid}/formData/salesPerUnit`
+          `admins/${auth.currentUser.uid}/formData/salesPerUnit`
         );
 
         const snapshot = await get(salesPerUnitRef);
