@@ -22,11 +22,11 @@ const PieChart = () => {
         const db = database;
         const salesRef = ref(
           db,
-          `users/${auth.currentUser.uid}/formData/salesPerUnit`
+          `admins/${auth.currentUser.uid}/formData/salesPerUnit`
         );
         const productsRef = ref(
           db,
-          `users/${auth.currentUser.uid}/formData/uniqueSellingProducts`
+          `admins/${auth.currentUser.uid}/formData/uniqueSellingProducts`
         );
 
         const salesSnapshot = await get(salesRef);
