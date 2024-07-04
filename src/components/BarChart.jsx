@@ -11,8 +11,8 @@ const fetchData = async () => {
     return { salesPerUnit: [], uniqueSellingProducts: [] };
   }
   const db = getDatabase();
-  const salesPerUnitRef = ref(db, `users/${auth.currentUser.uid}/formData/salesPerUnit`);
-  const uniqueSellingProductsRef = ref(db, `users/${auth.currentUser.uid}/formData/uniqueSellingProducts`);
+  const salesPerUnitRef = ref(db, `admins/${auth.currentUser.uid}/formData/salesPerUnit`);
+  const uniqueSellingProductsRef = ref(db, `admins/${auth.currentUser.uid}/formData/uniqueSellingProducts`);
 
   const [salesPerUnitSnapshot, uniqueSellingProductsSnapshot] = await Promise.all([
     get(salesPerUnitRef),
