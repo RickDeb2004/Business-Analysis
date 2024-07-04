@@ -20,6 +20,7 @@ import Feedback from "./scenes/feedback";
 import Notifications from "./components/Notification";
  // Import the new page component
 import Page from "./components/Pages";
+import { auth } from "./firebase";
 function App() {
   const [theme, colorMode] = useMode();
   const [isSidebarVisible, setSidebarVisible] = useState(false);
@@ -29,21 +30,53 @@ function App() {
   const navigate = useNavigate();
   const location = useLocation();
 
+  // useEffect(() => {
+  //   const storedUser = JSON.parse(localStorage.getItem("user"));
+  //   console.log("storedUser", storedUser)
+  //   if (storedUser) {
+  //     setLoggedIn(true);
+  //     setUserRole(storedUser.role);
+  //     setSidebarVisible(storedUser.role === "admin");
+  //     if (storedUser.role === "superadmin") {
+  //       navigate("/admins");
+  //     } else if (storedUser.role === "user") {
+  //       navigate("/page");  // Navigate to the new page for "user" role
+  //     } else {
+  //       navigate("/dashboard");
+  //     }
+  //   }else{
+  //     navigate("/");
+  //   }
+  // }, [isSidebarVisible]);
+
   useEffect(() => {
     const storedUser = JSON.parse(localStorage.getItem("user"));
+
     if (storedUser) {
-      setLoggedIn(true);
-      setUserRole(storedUser.role);
-      setSidebarVisible(storedUser.role === "admin");
-      if (storedUser.role === "superadmin") {
-        navigate("/admins");
-      } else if (storedUser.role === "user") {
-        navigate("/page");  // Navigate to the new page for "user" role
-      } else {
-        navigate("/dashboard");
-      }
+      auth.onAuthStateChanged((user) => {
+        if (user) {
+          setLoggedIn(true);
+          setUserRole(storedUser.role);
+          setSidebarVisible(storedUser.role === "admin");
+          if (storedUser.role === "superadmin") {
+            navigate("/admins");
+          } else if (storedUser.role === "user") {
+            navigate("/page"); // Navigate to the new page for "user" role
+          } else {
+            navigate("/dashboard");
+          }
+        }else if(user && storedUser.role === "admin"){
+          navigate("/dashboard");
+        } else {
+          setSidebarVisible(false);
+          navigate("/");
+        }
+      });
+    } else {
+      setSidebarVisible(false);
+      navigate("/");
     }
-  }, []);
+  }, [isSidebarVisible]);
 
   const handleLoginSuccess = (role) => {
     setLoggedIn(true);
@@ -58,12 +91,27 @@ function App() {
     }
   };
 
+  // const handleLogout = () => {
+  //   setLoggedIn(false);
+  //   setUserRole(null);
+  //   setSidebarVisible(false);
+  //   navigate("/");
+  // };
+
   const handleLogout = () => {
-    setLoggedIn(false);
-    setUserRole(null);
-    setSidebarVisible(false);
-    navigate("/");
+    auth.signOut().then(() => {
+      localStorage.removeItem("user");
+      setLoggedIn(false);
+      setUserRole(null);
+      setSidebarVisible(false);
+      navigate("/");
+    });
   };
+
+  // if stored user, then authenticate the user from db
+
+
+  
 
   const showTopbar = isLoggedIn && location.pathname !== "/";
 

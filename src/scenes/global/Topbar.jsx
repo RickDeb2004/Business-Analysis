@@ -36,13 +36,13 @@ const Topbar = ({ handleLogout }) => {
     }
 
     const fetchMessagesAndUserRole = async () => {
-      const currentUser = auth.currentUser;
+      const currentUser = auth.currentUser || storedUser;
       if (!currentUser) {
         navigate("/");
         return;
       }
 
-      const userRef = ref(database, `users/${currentUser.uid}`);
+      const userRef = ref(database, `rolemail/${currentUser.uid}`);
       const userSnapshot = await get(userRef);
       let userData;
       if (userSnapshot.exists()) {
@@ -65,7 +65,7 @@ const Topbar = ({ handleLogout }) => {
     };
 
     fetchMessagesAndUserRole();
-  }, [navigate]);
+  }, [handleLogout]);
 
   return (
     <Box display="flex" justifyContent="flex-end" p={2}>
