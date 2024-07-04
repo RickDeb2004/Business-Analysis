@@ -52,7 +52,7 @@ const Sidebar = () => {
   useEffect(() => {
     if (user) {
       const fetchUserInfo = async () => {
-        const userRef = ref(db, `users/${user.uid}`);
+        const userRef = ref(db, `admins/${user.uid}`);
         const snapshot = await get(userRef);
         if (snapshot.exists()) {
           const userData = snapshot.val();
@@ -71,7 +71,7 @@ const Sidebar = () => {
     reader.onloadend = async () => {
       const base64String = reader.result.split(",")[1];
       if (user) {
-        const userRef = ref(db, `users/${user.uid}`);
+        const userRef = ref(db, `admins/${user.uid}`);
         await update(userRef, { profileImage: base64String });
         setProfileImage(base64String);
       }
