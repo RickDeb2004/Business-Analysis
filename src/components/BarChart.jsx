@@ -1,26 +1,33 @@
-import React, { useEffect, useState } from 'react';
-import { useTheme } from '@mui/material';
-import { ResponsiveBar } from '@nivo/bar';
-import { tokens } from '../theme';
-import { getDatabase, ref, get } from 'firebase/database';
-import { auth } from '../firebase';
+import React, { useEffect, useState } from "react";
+import { useTheme } from "@mui/material";
+import { ResponsiveBar } from "@nivo/bar";
+import { tokens } from "../theme";
+import { getDatabase, ref, get } from "firebase/database";
+import { auth } from "../firebase";
 
 const fetchData = async () => {
   if (!auth.currentUser) {
-    // console.error("User is not authenticated");
     return { salesPerUnit: [], uniqueSellingProducts: [] };
   }
   const db = getDatabase();
-  const salesPerUnitRef = ref(db, `admins/${auth.currentUser.uid}/formData/salesPerUnit`);
-  const uniqueSellingProductsRef = ref(db, `admins/${auth.currentUser.uid}/formData/uniqueSellingProducts`);
+  const salesPerUnitRef = ref(
+    db,
+    `admins/${auth.currentUser.uid}/formData/salesPerUnit`
+  );
+  const uniqueSellingProductsRef = ref(
+    db,
+    `admins/${auth.currentUser.uid}/formData/uniqueSellingProducts`
+  );
 
-  const [salesPerUnitSnapshot, uniqueSellingProductsSnapshot] = await Promise.all([
-    get(salesPerUnitRef),
-    get(uniqueSellingProductsRef),
-  ]);
+  const [salesPerUnitSnapshot, uniqueSellingProductsSnapshot] =
+    await Promise.all([get(salesPerUnitRef), get(uniqueSellingProductsRef)]);
 
-  const salesPerUnit = salesPerUnitSnapshot.exists() ? salesPerUnitSnapshot.val() : [];
-  const uniqueSellingProducts = uniqueSellingProductsSnapshot.exists() ? uniqueSellingProductsSnapshot.val() : [];
+  const salesPerUnit = salesPerUnitSnapshot.exists()
+    ? salesPerUnitSnapshot.val()
+    : [];
+  const uniqueSellingProducts = uniqueSellingProductsSnapshot.exists()
+    ? uniqueSellingProductsSnapshot.val()
+    : [];
 
   return { salesPerUnit, uniqueSellingProducts };
 };
@@ -37,20 +44,20 @@ const generateColors = (products) => {
 
 const transformData = (salesPerUnit, uniqueSellingProducts) => {
   // Get unique products
-  const uniqueProducts = uniqueSellingProducts.map(item => item.product);
+  const uniqueProducts = uniqueSellingProducts.map((item) => item.product);
   const productColors = generateColors(uniqueProducts);
 
   const data = salesPerUnit.map((sale) => {
-    const product = uniqueSellingProducts.find((item) => item.country === sale.country)?.product || 'Unknown Product';
+    const product =
+      uniqueSellingProducts.find((item) => item.country === sale.country)
+        ?.product || "Unknown Product";
     return {
       country: sale.country,
-      [product]: sale.unitSales,
-      [`${product}Color`]: productColors[product] || productColors['Unknown Product'],
+      unitSales: sale.unitSales,
+      product: product,
+      productColor: productColors[product] || productColors["Unknown Product"],
     };
   });
-  // console.log('Sales Per Unit:', salesPerUnit);
-  // console.log('Unique Selling Products:', uniqueSellingProducts);
-  // console.log('Transformed Data:', data);
   return data;
 };
 
@@ -62,7 +69,10 @@ const BarChart = ({ isDashboard = false }) => {
   useEffect(() => {
     const fetchAndTransformData = async () => {
       const { salesPerUnit, uniqueSellingProducts } = await fetchData();
-      const transformedData = transformData(salesPerUnit, uniqueSellingProducts);
+      const transformedData = transformData(
+        salesPerUnit,
+        uniqueSellingProducts
+      );
       setData(transformedData);
     };
 
@@ -100,16 +110,16 @@ const BarChart = ({ isDashboard = false }) => {
           },
         },
       }}
-      keys={data.length > 0 ? Object.keys(data[0]).filter(key => key !== 'country' && !key.endsWith('Color')) : []}
+      keys={["unitSales"]}
       indexBy="country"
       margin={{ top: 50, right: 130, bottom: 50, left: 60 }}
       padding={0.3}
-      valueScale={{ type: 'linear' }}
-      indexScale={{ type: 'band', round: true }}
-      colors={({ id, data }) => data[`${id}Color`]}
+      valueScale={{ type: "linear" }}
+      indexScale={{ type: "band", round: true }}
+      colors={({ data }) => data.productColor}
       borderColor={{
-        from: 'color',
-        modifiers: [['darker', '1.6']],
+        from: "color",
+        modifiers: [["darker", "1.6"]],
       }}
       axisTop={null}
       axisRight={null}
@@ -117,42 +127,42 @@ const BarChart = ({ isDashboard = false }) => {
         tickSize: 5,
         tickPadding: 5,
         tickRotation: 0,
-        legend: isDashboard ? undefined : 'country',
-        legendPosition: 'middle',
+        legend: isDashboard ? undefined : "country",
+        legendPosition: "middle",
         legendOffset: 32,
       }}
       axisLeft={{
         tickSize: 5,
         tickPadding: 5,
         tickRotation: 0,
-        legend: isDashboard ? undefined : 'units',
-        legendPosition: 'middle',
+        legend: isDashboard ? undefined : "units",
+        legendPosition: "middle",
         legendOffset: -40,
       }}
       enableLabel={false}
       labelSkipWidth={12}
       labelSkipHeight={12}
       labelTextColor={{
-        from: 'color',
-        modifiers: [['darker', 1.6]],
+        from: "color",
+        modifiers: [["darker", 1.6]],
       }}
       legends={[
         {
-          dataFrom: 'keys',
-          anchor: 'bottom-right',
-          direction: 'column',
+          dataFrom: "keys",
+          anchor: "bottom-right",
+          direction: "column",
           justify: false,
           translateX: 120,
           translateY: 0,
           itemsSpacing: 2,
           itemWidth: 100,
           itemHeight: 20,
-          itemDirection: 'left-to-right',
+          itemDirection: "left-to-right",
           itemOpacity: 0.85,
           symbolSize: 20,
           effects: [
             {
-              on: 'hover',
+              on: "hover",
               style: {
                 itemOpacity: 1,
               },
@@ -160,22 +170,22 @@ const BarChart = ({ isDashboard = false }) => {
           ],
         },
       ]}
-      tooltip={({ id, value, indexValue }) => (
+      tooltip={({ data }) => (
         <div
           style={{
-            padding: '12px',
-            color: '#fff',
-            background: '#333',
+            padding: "12px",
+            color: "#fff",
+            background: "#333",
           }}
         >
           <strong>
-            {indexValue}: {id} ({value})
+            {data.country}: {data.product} ({data.unitSales})
           </strong>
         </div>
       )}
       role="application"
       barAriaLabel={function (e) {
-        return e.id + ': ' + e.formattedValue + ' in country: ' + e.indexValue;
+        return e.id + ": " + e.formattedValue + " in country: " + e.indexValue;
       }}
     />
   );
