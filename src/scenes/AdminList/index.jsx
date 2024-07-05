@@ -29,7 +29,9 @@ import {
 import { auth, database } from "../../firebase";
 import Header from "../../components/Header";
 import DeleteIcon from "@mui/icons-material/Delete";
+import SendIcon from "@mui/icons-material/Send";
 import ChatIcon from "@mui/icons-material/Chat";
+
 import { useNavigate } from "react-router-dom";
 import { createUserWithEmailAndPassword } from "firebase/auth";
 
@@ -56,9 +58,10 @@ const AdminList = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const fetchAdmins = async () => {
+    const fetchAdmins = async (id) => {
       const adminsRef = ref(database, "admins");
       const snapshot = await get(adminsRef);
+     
       if (snapshot.exists()) {
         const users = snapshot.val();
 
@@ -68,7 +71,7 @@ const AdminList = () => {
         }));
 
         // Fetch feedbacks and merge with admin data
-        const feedbackRef = ref(database, "feedback");
+        const feedbackRef = ref(database, `admins/${id}`);
         const feedbackSnapshot = await get(feedbackRef);
         const feedbackData = feedbackSnapshot.exists()
           ? feedbackSnapshot.val()
@@ -462,43 +465,14 @@ const AdminList = () => {
           </Button>
         </DialogActions>
       </Dialog>
-      {/* <Dialog open={openChatDialog} onClose={() => setOpenChatDialog(false)}>
 
-        <DialogTitle
-          sx={{ backgroundColor: "#000000", color: colors.yellowAccent[600],display: 'flex', flexDirection: 'column', gap: '10px', overflowY: 'auto', maxHeight: '400px' }}
-        >
-          CHAT WITH ADMIN
-        </DialogTitle>
-        <DialogContent sx={{ backgroundColor: "#000000" }}>
-          <TextField
-            margin="dense"
-            label="Message"
-            fullWidth
-            variant="outlined"
-            value={chatMessage}
-            onChange={(e) => setChatMessage(e.target.value)}
-            sx={{
-              marginBottom: "10px",
-              boxShadow:
-                "0px 2px 3px -1px rgba(0,0,0,0.1), 0px 1px 0px 0px rgba(25,28,33,0.02), 0px 0px 0px 1px rgba(25,28,33,0.08)",
-              "&:hover": {
-                boxShadow: "0px 0px 8px 2px rgba(33,150,243,0.5)",
-              },
-            }}
-          />
-        </DialogContent>
-        <DialogActions sx={{ backgroundColor: "#000000" }}>
-          <Button onClick={() => setOpenChatDialog(false)} color="secondary">
-            Cancel
-          </Button>
-          <Button onClick={handleSendMessage} color="info">
-            Send
-          </Button>
-        </DialogActions>
-      </Dialog> */}
       <Dialog open={openChatDialog} onClose={() => setOpenChatDialog(false)}>
-        <DialogTitle>Chat with Admin</DialogTitle>
-        <DialogContent dividers>
+        <DialogTitle
+          sx={{ backgroundColor: "#000000", color: colors.yellowAccent[600] }}
+        >
+          Chat with Admin
+        </DialogTitle>
+        <DialogContent dividers sx={{ backgroundColor: "#000000" }}>
           <Box
             sx={{
               display: "flex",
@@ -535,7 +509,12 @@ const AdminList = () => {
           </Box>
         </DialogContent>
         <DialogActions
-          sx={{ display: "flex", alignItems: "center", gap: "10px" }}
+          sx={{
+            backgroundColor: "#000000",
+            display: "flex",
+            alignItems: "center",
+            gap: "10px",
+          }}
         >
           <TextField
             value={chatMessage}
@@ -544,14 +523,18 @@ const AdminList = () => {
             fullWidth
             variant="outlined"
             size="small"
+            sx={{
+              marginBottom: "10px",
+              boxShadow:
+                "0px 2px 3px -1px rgba(0,0,0,0.1), 0px 1px 0px 0px rgba(25,28,33,0.02), 0px 0px 0px 1px rgba(25,28,33,0.08)",
+              "&:hover": {
+                boxShadow: "0px 0px 8px 2px rgba(33,150,243,0.5)",
+              },
+            }}
           />
-          <Button
-            onClick={handleSendMessage}
-            color="primary"
-            variant="contained"
-          >
-            Send
-          </Button>
+          <IconButton onClick={handleSendMessage} color="info" variant="contained">
+            <SendIcon />
+          </IconButton>
         </DialogActions>
       </Dialog>
     </Box>
