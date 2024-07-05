@@ -10,6 +10,7 @@ import {
   IconButton,
   InputLabel,
   TextField,
+  Typography,
 } from "@mui/material";
 import { DataGrid, GridToolbar } from "@mui/x-data-grid";
 import { useTheme } from "@mui/material";
@@ -23,6 +24,7 @@ import {
   onChildChanged,
   onChildRemoved,
   off,
+  push,
 } from "firebase/database";
 import { auth, database } from "../../firebase";
 import Header from "../../components/Header";
@@ -50,61 +52,59 @@ const AdminList = () => {
   const [unreadMessagesCount, setUnreadMessagesCount] = useState(0);
   const [messages, setMessages] = useState([]);
 
-
   const [error, setError] = useState("");
   const navigate = useNavigate();
 
-useEffect(() => {
-  const fetchAdmins = async () => {
-    const adminsRef = ref(database, "admins");
-    const snapshot = await get(adminsRef);
-    if (snapshot.exists()) {
-      const users = snapshot.val();
+  useEffect(() => {
+    const fetchAdmins = async () => {
+      const adminsRef = ref(database, "admins");
+      const snapshot = await get(adminsRef);
+      if (snapshot.exists()) {
+        const users = snapshot.val();
 
-      const adminList = Object.keys(users).map((key) => ({
-        id: key,
-        ...users[key],
-      }));
+        const adminList = Object.keys(users).map((key) => ({
+          id: key,
+          ...users[key],
+        }));
 
-      // Fetch feedbacks and merge with admin data
-      const feedbackRef = ref(database, "feedback");
-      const feedbackSnapshot = await get(feedbackRef);
-      const feedbackData = feedbackSnapshot.exists()
-        ? feedbackSnapshot.val()
-        : {};
+        // Fetch feedbacks and merge with admin data
+        const feedbackRef = ref(database, "feedback");
+        const feedbackSnapshot = await get(feedbackRef);
+        const feedbackData = feedbackSnapshot.exists()
+          ? feedbackSnapshot.val()
+          : {};
 
-      const adminListWithFeedback = adminList.map((admin) => {
-        const adminFeedbacks = feedbackData[admin.uid]
-          ? Object.values(feedbackData[admin.uid])
-          : [];
-        const length = adminFeedbacks.length;
-        const latestFeedback = length > 0 ? adminFeedbacks[length - 1] : null;
+        const adminListWithFeedback = adminList.map((admin) => {
+          const adminFeedbacks = feedbackData[admin.uid]
+            ? Object.values(feedbackData[admin.uid])
+            : [];
+          const length = adminFeedbacks.length;
+          const latestFeedback = length > 0 ? adminFeedbacks[length - 1] : null;
 
-        return {
-          ...admin,
-          feedback: latestFeedback ? latestFeedback.feedback : "No feedback",
-        };
-      });
+          return {
+            ...admin,
+            feedback: latestFeedback ? latestFeedback.feedback : "No feedback",
+          };
+        });
 
-      setAdmins(adminListWithFeedback);
+        setAdmins(adminListWithFeedback);
 
-      // Get the current user's ID and role
-      const currentUserId = auth.currentUser.uid;
-      const roleMailRef = ref(database, `rolemail/${currentUserId}`);
-      const roleMailSnapshot = await get(roleMailRef);
-      if (roleMailSnapshot.exists()) {
-        const currentUserData = roleMailSnapshot.val();
-        setCurrentUserRole(currentUserData.role);
+        // Get the current user's ID and role
+        const currentUserId = auth.currentUser.uid;
+        const roleMailRef = ref(database, `rolemail/${currentUserId}`);
+        const roleMailSnapshot = await get(roleMailRef);
+        if (roleMailSnapshot.exists()) {
+          const currentUserData = roleMailSnapshot.val();
+          setCurrentUserRole(currentUserData.role);
+        }
       }
-    }
-  };
-  fetchAdmins();
-}, []);
-
+    };
+    fetchAdmins();
+  }, []);
 
   useEffect(() => {
     const adminsRef = ref(database, "admins");
-  
+
     const handleChildAddedOrChanged = async (snapshot) => {
       const data = snapshot.val();
       const feedbackRef = ref(database, `feedback/${data.uid}`);
@@ -113,7 +113,7 @@ useEffect(() => {
         ? Object.values(feedbackSnapshot.val())
         : [];
       const feedbackText = feedbacks.map((fb) => fb.feedback).join(", ");
-  
+
       setAdmins((prevAdmins) => {
         const existingIndex = prevAdmins.findIndex(
           (item) => item.id === snapshot.key
@@ -134,17 +134,17 @@ useEffect(() => {
         }
       });
     };
-  
+
     const handleChildRemoved = (snapshot) => {
       setAdmins((prevAdmins) =>
         prevAdmins.filter((item) => item.id !== snapshot.key)
       );
     };
-  
+
     onChildAdded(adminsRef, handleChildAddedOrChanged);
     onChildChanged(adminsRef, handleChildAddedOrChanged);
     onChildRemoved(adminsRef, handleChildRemoved);
-  
+
     // Clean up listeners
     return () => {
       off(adminsRef, "child_added", handleChildAddedOrChanged);
@@ -152,11 +152,9 @@ useEffect(() => {
       off(adminsRef, "child_removed", handleChildRemoved);
     };
   }, []);
-  
 
   const handleDelete = async (id) => {
     try {
-
       await remove(ref(database, `admins/${id}`));
 
       setAdmins(admins.filter((admin) => admin.id !== id));
@@ -167,9 +165,8 @@ useEffect(() => {
 
   const handleChat = (id) => {
     setSelectedAdminId(id);
-
+    fetchMessages(id);
     setOpenChatDialog(true);
-
   };
 
   const handleDialogOpen = () => {
@@ -184,7 +181,6 @@ useEffect(() => {
 
   const handleFormSubmit = async () => {
     try {
-
       const roleMailRef = ref(database, "rolemail");
       const roleMailSnapshot = await get(roleMailRef);
       const roleMailData = roleMailSnapshot.exists()
@@ -196,7 +192,6 @@ useEffect(() => {
         Object.values(roleMailData).some(
           (entry) => entry.email === formData.email
         )
-
       ) {
         setError("Email already in use");
         return;
@@ -210,7 +205,6 @@ useEffect(() => {
       );
       const user = userCredential.user;
 
-
       // Add the new admin role and email to the rolemail ref
       await set(ref(database, `rolemail/${user.uid}`), {
         email: formData.email,
@@ -223,7 +217,6 @@ useEffect(() => {
         email: formData.email,
         password: formData.password,
         role: formData.role,
-
       });
 
       // Close the dialog and reset the form
@@ -231,6 +224,20 @@ useEffect(() => {
     } catch (error) {
       console.error("Error adding admin:", error);
       setError("Failed to add admin. Please try again.");
+    }
+  };
+  const fetchMessages = async (adminId) => {
+    const messagesRef = ref(database, `chats/${adminId}`);
+    const snapshot = await get(messagesRef);
+    if (snapshot.exists()) {
+      const messagesData = snapshot.val();
+      const allMessages = Object.entries(messagesData).map(
+        ([msgId, message]) => ({
+          ...message,
+          msgId,
+        })
+      );
+      setMessages(allMessages);
     }
   };
 
@@ -274,21 +281,17 @@ useEffect(() => {
       ),
     },
   ];
-  
+
   const handleSendMessage = async () => {
     if (chatMessage.trim() === "") return;
-    const newMessageRef = ref(
-      database,
-      `messages/${selectedAdminId}/${Date.now()}`
-    );
-    await set(newMessageRef, {
+    const messageRef = ref(database, `chats/${selectedAdminId}`);
+    await push(messageRef, {
       message: chatMessage,
       timestamp: Date.now(),
       sender: "superadmin",
     });
-
     setChatMessage("");
-    setOpenChatDialog(false);
+    fetchMessages(selectedAdminId);
   };
   return (
     <Box m="20px">
@@ -459,12 +462,12 @@ useEffect(() => {
           </Button>
         </DialogActions>
       </Dialog>
-      <Dialog open={openChatDialog} onClose={() => setOpenChatDialog(false)}>
+      {/* <Dialog open={openChatDialog} onClose={() => setOpenChatDialog(false)}>
 
         <DialogTitle
-          sx={{ backgroundColor: "#000000", color: colors.yellowAccent[600] }}
+          sx={{ backgroundColor: "#000000", color: colors.yellowAccent[600],display: 'flex', flexDirection: 'column', gap: '10px', overflowY: 'auto', maxHeight: '400px' }}
         >
-          Send Message
+          CHAT WITH ADMIN
         </DialogTitle>
         <DialogContent sx={{ backgroundColor: "#000000" }}>
           <TextField
@@ -492,8 +495,65 @@ useEffect(() => {
             Send
           </Button>
         </DialogActions>
+      </Dialog> */}
+      <Dialog open={openChatDialog} onClose={() => setOpenChatDialog(false)}>
+        <DialogTitle>Chat with Admin</DialogTitle>
+        <DialogContent dividers>
+          <Box
+            sx={{
+              display: "flex",
+              flexDirection: "column",
+              gap: "10px",
+              overflowY: "auto",
+              maxHeight: "400px",
+            }}
+          >
+            {messages.map((msg) => (
+              <Box
+                key={msg.msgId}
+                sx={{
+                  alignSelf:
+                    msg.sender === "superadmin" ? "flex-end" : "flex-start",
+                }}
+              >
+                <Typography
+                  variant="body2"
+                  sx={{
+                    background:
+                      msg.sender === "superadmin"
+                        ? colors.tealAccent[700]
+                        : colors.primary[400],
+                    padding: "8px 12px",
+                    borderRadius: "4px",
+                    color: "#ffffff",
+                  }}
+                >
+                  {msg.message}
+                </Typography>
+              </Box>
+            ))}
+          </Box>
+        </DialogContent>
+        <DialogActions
+          sx={{ display: "flex", alignItems: "center", gap: "10px" }}
+        >
+          <TextField
+            value={chatMessage}
+            onChange={(e) => setChatMessage(e.target.value)}
+            placeholder="Type a message"
+            fullWidth
+            variant="outlined"
+            size="small"
+          />
+          <Button
+            onClick={handleSendMessage}
+            color="primary"
+            variant="contained"
+          >
+            Send
+          </Button>
+        </DialogActions>
       </Dialog>
-
     </Box>
   );
 };
