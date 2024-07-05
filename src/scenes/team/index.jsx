@@ -232,41 +232,35 @@ const Team = () => {
   };
 
   const handleFormSubmit = async () => {
-    const userId = selectedUser ? selectedUser.id : `${adminID}_${uuidv4()}`;
-
-    const userRef = ref(database, `userList/${adminID}/${userId}`);
-    const roleMailRef = ref(database, `rolemail/${userId}`);
-
     const userData = {
-      ...formData,
-      signInTime: new Date().toISOString(),
-      blocked: false,
+      email: formData.email,
+      password: formData.password,
+      displayName: formData.name,
+      role: formData.role,
     };
 
-    if (selectedUser) {
-      if (!formData.password) delete userData.password; // Do not update password if it's empty
-      await update(userRef, userData);
-      await update(roleMailRef, {
-        email: formData.email,
-        role: formData.role,
+    try {
+      const accessToken = auth.currentUser ? await user.getIdToken() : null;
+      const response = await fetch("http://localhost:3000/create-user", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify(userData),
       });
-    } else {
-      try {
-        await createUserWithEmailAndPassword(
-          auth,
-          formData.email,
-          formData.password
-        );
-        await set(userRef, userData);
-        await set(roleMailRef, {
-          email: formData.email,
-          role: formData.role,
-        });
-      } catch (error) {
-        console.error("Error adding new user:", error);
+
+      if (!response.ok) {
+        throw new Error("Error creating user");
       }
+
+      const data = await response.json();
+      console.log("User created with UID:", data.uid);
+
+      handleDialogClose();
+    } catch (error) {
+      console.error("Error:", error);
     }
-    handleDialogClose();
   };
 
   const handleConfirmDelete = async (user) => {
