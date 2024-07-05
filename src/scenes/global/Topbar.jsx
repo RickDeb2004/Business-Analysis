@@ -5,8 +5,7 @@ import { auth, database } from "../../firebase"; // Import Firebase auth
 import { signOut } from "firebase/auth";
 import { useEffect, useState } from "react";
 import { get, ref } from "firebase/database";
-import NotificationsIcon from "@mui/icons-material/Notifications";
-
+import ChatIcon from "@mui/icons-material/Chat";
 const Topbar = ({ handleLogout }) => {
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
@@ -79,7 +78,7 @@ const Topbar = ({ handleLogout }) => {
         <Box mr={2}>
         <IconButton color="inherit" onClick={() => navigate("/notifications")}>
           <Badge badgeContent={unreadMessagesCount} color="secondary">
-            <NotificationsIcon />
+            <ChatIcon />
           </Badge>
         </IconButton>
         </Box>

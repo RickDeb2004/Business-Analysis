@@ -7,7 +7,9 @@ import {
   DialogContent,
   DialogTitle,
   TextField,
+
   IconButton,
+
   Typography,
 } from "@mui/material";
 import { DataGrid, GridToolbar } from "@mui/x-data-grid";
@@ -22,11 +24,14 @@ import {
   onChildChanged,
   onChildRemoved,
   off,
+  push,
 } from "firebase/database";
 import { auth, database } from "../../firebase";
 import Header from "../../components/Header";
 import DeleteIcon from "@mui/icons-material/Delete";
+import SendIcon from "@mui/icons-material/Send";
 import ChatIcon from "@mui/icons-material/Chat";
+
 import { useNavigate } from "react-router-dom";
 import { createUserWithEmailAndPassword, getAuth } from "firebase/auth";
 
@@ -45,10 +50,12 @@ const AdminList = () => {
   const [openChatDialog, setOpenChatDialog] = useState(false);
   const [chatMessage, setChatMessage] = useState("");
   const [selectedAdminId, setSelectedAdminId] = useState(null);
+
   const [error, setError] = useState("");
   const navigate = useNavigate();
 
   useEffect(() => {
+
     const fetchAdmins = async () => {
       const adminsRef = ref(database, "admins");
       const snapshot = await get(adminsRef);
@@ -56,11 +63,13 @@ const AdminList = () => {
         const users = snapshot.val();
 
         const adminsList = Object.keys(users).map((key) => ({
+
           id: key,
           ...users[key],
         }));
 
         // Fetch feedbacks and merge with admin data
+
         const updatedAdminsList = await Promise.all(
           adminsList.map(async (admin) => {
             const feedbackRef = ref(database, `admins/${admin.id}/feedback`);
@@ -89,6 +98,7 @@ const AdminList = () => {
       }
     };
 
+
     fetchAdmins();
   }, []);
 
@@ -99,12 +109,14 @@ const AdminList = () => {
       const data = snapshot.val();
       const feedbackRef = ref(database, `admins/${snapshot.key}/feedback`);
       const feedbackSnapshot = await get(feedbackRef);
+
       let latestFeedback = "No feedback";
       if (feedbackSnapshot.exists()) {
         const feedbacks = Object.values(feedbackSnapshot.val());
         latestFeedback =
           feedbacks.length > 0 ? feedbacks[feedbacks.length - 1] : "No feedback";
       }
+
 
       setAdmins((prevAdmins) => {
         const existingIndex = prevAdmins.findIndex(
@@ -157,6 +169,7 @@ const AdminList = () => {
 
   const handleChat = (id) => {
     setSelectedAdminId(id);
+
     setOpenChatDialog(true);
   };
 
@@ -217,6 +230,20 @@ const AdminList = () => {
       setError("Failed to add admin. Please try again.");
     }
   };
+  const fetchMessages = async (adminId) => {
+    const messagesRef = ref(database, `chats/${adminId}`);
+    const snapshot = await get(messagesRef);
+    if (snapshot.exists()) {
+      const messagesData = snapshot.val();
+      const allMessages = Object.entries(messagesData).map(
+        ([msgId, message]) => ({
+          ...message,
+          msgId,
+        })
+      );
+      setMessages(allMessages);
+    }
+  };
 
   const columns = [
     { field: "id", headerName: "ID", flex: 1 },
@@ -261,18 +288,14 @@ const AdminList = () => {
 
   const handleSendMessage = async () => {
     if (chatMessage.trim() === "") return;
-    const newMessageRef = ref(
-      database,
-      `messages/${selectedAdminId}/${Date.now()}`
-    );
-    await set(newMessageRef, {
+    const messageRef = ref(database, `chats/${selectedAdminId}`);
+    await push(messageRef, {
       message: chatMessage,
       timestamp: Date.now(),
       sender: "superadmin",
     });
-
     setChatMessage("");
-    setOpenChatDialog(false);
+    fetchMessages(selectedAdminId);
   };
 
   return (
@@ -400,31 +423,78 @@ const AdminList = () => {
           </Button>
         </DialogActions>
       </Dialog>
+
+
       <Dialog open={openChatDialog} onClose={() => setOpenChatDialog(false)}>
-        <DialogTitle>Send Message</DialogTitle>
-        <DialogContent>
+        <DialogTitle
+          sx={{ backgroundColor: "#000000", color: colors.yellowAccent[600] }}
+        >
+          Chat with Admin
+        </DialogTitle>
+        <DialogContent dividers sx={{ backgroundColor: "#000000" }}>
+          <Box
+            sx={{
+              display: "flex",
+              flexDirection: "column",
+              gap: "10px",
+              overflowY: "auto",
+              maxHeight: "400px",
+            }}
+          >
+            {messages.map((msg) => (
+              <Box
+                key={msg.msgId}
+                sx={{
+                  alignSelf:
+                    msg.sender === "superadmin" ? "flex-end" : "flex-start",
+                }}
+              >
+                <Typography
+                  variant="body2"
+                  sx={{
+                    background:
+                      msg.sender === "superadmin"
+                        ? colors.tealAccent[700]
+                        : colors.primary[400],
+                    padding: "8px 12px",
+                    borderRadius: "4px",
+                    color: "#ffffff",
+                  }}
+                >
+                  {msg.message}
+                </Typography>
+              </Box>
+            ))}
+          </Box>
+        </DialogContent>
+        <DialogActions
+          sx={{
+            backgroundColor: "#000000",
+            display: "flex",
+            alignItems: "center",
+            gap: "10px",
+          }}
+        >
           <TextField
-            autoFocus
-            margin="dense"
-            label="Message"
-            type="text"
-            fullWidth
-            multiline
-            rows={4}
             value={chatMessage}
             onChange={(e) => setChatMessage(e.target.value)}
+            placeholder="Type a message"
+            fullWidth
+            variant="outlined"
+            size="small"
+            sx={{
+              marginBottom: "10px",
+              boxShadow:
+                "0px 2px 3px -1px rgba(0,0,0,0.1), 0px 1px 0px 0px rgba(25,28,33,0.02), 0px 0px 0px 1px rgba(25,28,33,0.08)",
+              "&:hover": {
+                boxShadow: "0px 0px 8px 2px rgba(33,150,243,0.5)",
+              },
+            }}
           />
-        </DialogContent>
-        <DialogActions>
-          <Button
-            onClick={() => setOpenChatDialog(false)}
-            color="primary"
-          >
-            Cancel
-          </Button>
-          <Button onClick={handleSendMessage} color="primary">
-            Send
-          </Button>
+          <IconButton onClick={handleSendMessage} color="info" variant="contained">
+            <SendIcon />
+          </IconButton>
+
         </DialogActions>
       </Dialog>
     </Box>
