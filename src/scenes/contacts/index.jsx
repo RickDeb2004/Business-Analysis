@@ -13,9 +13,7 @@ import { tokens } from "../../theme";
 import Header from "../../components/Header";
 import { useEffect, useState } from "react";
 import { getDatabase, ref, set, update, remove, get } from "firebase/database";
-
 import { auth, database } from "../../firebase";
-
 import { v4 as uuidv4 } from "uuid";
 import { motion } from "framer-motion";
 import Delete from "@mui/icons-material/Delete";
@@ -25,9 +23,8 @@ const Contacts = () => {
   const [contacts, setContacts] = useState([]);
   const [openDialog, setOpenDialog] = useState(false);
   const [selectedContact, setSelectedContact] = useState(null);
-
   const [adminID, setAdminID] = useState(null);
-
+  const user = auth.currentUser;
   const [formData, setFormData] = useState({
     registrarId: "",
     name: "",
@@ -80,9 +77,7 @@ const Contacts = () => {
   useEffect(() => {
     const fetchContacts = async () => {
       try {
-
         const contactsRef = ref(database, "contacts/" + user.uid);
-
         const snapshot = await get(contactsRef);
         if (snapshot.exists()) {
           const data = snapshot.val();
@@ -101,13 +96,11 @@ const Contacts = () => {
     fetchContacts();
   }, []);
 
-
   useEffect(() => {
     if (user) {
       setAdminID(user.uid);
     }
   }, [user]);
-
 
   const handleAddContact = () => {
     setFormData({
@@ -132,9 +125,7 @@ const Contacts = () => {
 
   const handleDeleteContact = async (contact) => {
     try {
-
       const contactRef = ref(database, `contacts/${adminID}/${contact.id}`);
-
       await remove(contactRef);
       setContacts((prevContacts) =>
         prevContacts.filter((c) => c.id !== contact.id)
@@ -163,12 +154,10 @@ const Contacts = () => {
     try {
       const contactData = {
         ...formData,
-
         id: selectedContact ? selectedContact.id : `${adminID}_${uuidv4()}`,
       };
 
       const contactRef = ref(database, `contacts/${adminID}/${contactData.id}`);
-
       if (selectedContact) {
         await update(contactRef, contactData);
         setContacts((prevContacts) =>
