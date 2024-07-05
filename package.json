@@ -28,10 +28,8 @@
     "body-parser": "^1.20.2",
     "chart.js": "^3.9.1",
     "clsx": "^2.1.1",
-
     "cors": "^2.8.5",
     "express": "^4.19.2",
-
     "firebase": "^10.12.2",
     "firebase-admin": "^12.2.0",
     "formik": "^2.2.9",
@@ -53,7 +51,8 @@
     "start": "cross-env PORT=5000 react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "serve" : "nodemon server.js"
   },
   "eslintConfig": {
     "extends": [
@@ -74,6 +73,7 @@
     ]
   },
   "devDependencies": {
-    "cross-env": "^7.0.3"
+    "cross-env": "^7.0.3",
+    "nodemon": "^3.1.4"
   }
 }

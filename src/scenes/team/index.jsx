@@ -236,32 +236,37 @@ const Team = () => {
   };
 
   const handleFormSubmit = async () => {
-
     const userData = {
+      uid: `${adminID}_${uuidv4()}`,
       email: formData.email,
       password: formData.password,
       displayName: formData.name,
       role: formData.role,
     };
-
+  
     try {
-      const accessToken = auth.currentUser ? await user.getIdToken() : null;
       const response = await fetch("http://localhost:3000/create-user", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${accessToken}`,
         },
         body: JSON.stringify(userData),
       });
-
+  
       if (!response.ok) {
         throw new Error("Error creating user");
       }
 
+      // save to rolemail
+      const roleMailRef = ref(database, `rolemail/${userData.uid}`);
+      await set(roleMailRef, {
+        email: userData.email,
+        role: userData.role,
+      });
+  
       const data = await response.json();
       console.log("User created with UID:", data.uid);
-
+  
       handleDialogClose();
     } catch (error) {
       console.error("Error:", error);
