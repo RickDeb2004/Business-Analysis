@@ -3,7 +3,6 @@ const admin = require('firebase-admin');
 const bodyParser = require('body-parser');
 const cors = require('cors');
 
-
 // Initialize Firebase Admin SDK
 const serviceAccount = require('./serviceAccountKey.json');
 
@@ -18,41 +17,28 @@ app.use(bodyParser.json());
 
 const PORT = process.env.PORT || 3000;
 
-// Middleware to verify Firebase ID token
-const authenticate = async (req, res, next) => {
-  const idToken = req.headers.authorization;
-  if (!idToken) {
-    return res.status(401).send('Unauthorized');
-  }
-  try {
-    const decodedToken = await admin.auth().verifyIdToken(idToken);
-    req.user = decodedToken;
-    next();
-  } catch (error) {
-    res.status(401).send('Unauthorized');
-  }
-};
-
 // Route to create a new user
-app.post('/create-user', authenticate, async (req, res) => {
-  const { email, password, displayName, role } = req.body;
+app.post('/create-user', async (req, res) => {
+  const { email, password, displayName, role, uid } = req.body;
   try {
     const userRecord = await admin.auth().createUser({
-      email,
-      password,
-      displayName,
+      uid: uid,
+      email: email,
+      password: password,
+      displayName: displayName,
     });
 
-    // Optionally, set custom claims (roles) for the user
-    await admin.auth().setCustomUserClaims(userRecord.uid, { role });
+    // Extract adminId from uid (assuming format is adminId_uuid)
+    const adminId = uid.split('_')[0];
 
-    // Add user data to the database
-    const userRef = admin.database().ref(`userList/${req.user.uid}/${userRecord.uid}`);
+    // Add user data to the database under the specified reference
+    const userRef = admin.database().ref(`userList/${adminId}/${userRecord.uid}`);
     await userRef.set({
       name: displayName,
       email,
       role,
-      signInTime: new Date().toISOString(),
+      password,
+      signInTime: "yet to login",
       blocked: false,
     });
 
@@ -60,6 +46,10 @@ app.post('/create-user', authenticate, async (req, res) => {
   } catch (error) {
     res.status(500).send(error.message);
   }
+});
+
+app.get('/', (req, res) => {
+  res.send('Hello World');
 });
 
 app.listen(PORT, () => {
