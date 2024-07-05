@@ -33,7 +33,7 @@ import SendIcon from "@mui/icons-material/Send";
 import ChatIcon from "@mui/icons-material/Chat";
 
 import { useNavigate } from "react-router-dom";
-import { createUserWithEmailAndPassword } from "firebase/auth";
+import { createUserWithEmailAndPassword, getAuth } from "firebase/auth";
 
 const AdminList = () => {
   const theme = useTheme();
@@ -58,50 +58,46 @@ const AdminList = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const fetchAdmins = async (id) => {
+    const fetchAdmins = async () => {
       const adminsRef = ref(database, "admins");
       const snapshot = await get(adminsRef);
-     
       if (snapshot.exists()) {
         const users = snapshot.val();
 
-        const adminList = Object.keys(users).map((key) => ({
+        const adminsList = Object.keys(users).map((key) => ({
           id: key,
           ...users[key],
         }));
 
         // Fetch feedbacks and merge with admin data
-        const feedbackRef = ref(database, `admins/${id}`);
-        const feedbackSnapshot = await get(feedbackRef);
-        const feedbackData = feedbackSnapshot.exists()
-          ? feedbackSnapshot.val()
-          : {};
+        const updatedAdminsList = await Promise.all(
+          adminsList.map(async (admin) => {
+            const feedbackRef = ref(database, `admins/${admin.id}/feedback`);
+            const feedbackSnapshot = await get(feedbackRef);
+            let latestFeedback = "No feedback";
+            if (feedbackSnapshot.exists()) {
+              const feedbacks = Object.values(feedbackSnapshot.val());
+              latestFeedback =
+                feedbacks.length > 0 ? feedbacks[feedbacks.length - 1] : "No feedback";
+            }
+            return { ...admin, feedback: latestFeedback };
+          })
+        );
 
-        const adminListWithFeedback = adminList.map((admin) => {
-          const adminFeedbacks = feedbackData[admin.uid]
-            ? Object.values(feedbackData[admin.uid])
-            : [];
-          const length = adminFeedbacks.length;
-          const latestFeedback = length > 0 ? adminFeedbacks[length - 1] : null;
+        setAdmins(updatedAdminsList);
+      }
 
-          return {
-            ...admin,
-            feedback: latestFeedback ? latestFeedback.feedback : "No feedback",
-          };
-        });
-
-        setAdmins(adminListWithFeedback);
-
-        // Get the current user's ID and role
-        const currentUserId = auth.currentUser.uid;
-        const roleMailRef = ref(database, `rolemail/${currentUserId}`);
-        const roleMailSnapshot = await get(roleMailRef);
-        if (roleMailSnapshot.exists()) {
-          const currentUserData = roleMailSnapshot.val();
-          setCurrentUserRole(currentUserData.role);
-        }
+      // Get the current user's ID and role
+      const auth = getAuth();
+      const currentUserId = auth.currentUser.uid;
+      const roleMailRef = ref(database, `rolemail/${currentUserId}`);
+      const roleMailSnapshot = await get(roleMailRef);
+      if (roleMailSnapshot.exists()) {
+        const currentUserData = roleMailSnapshot.val();
+        setCurrentUserRole(currentUserData.role);
       }
     };
+
     fetchAdmins();
   }, []);
 
@@ -110,12 +106,14 @@ const AdminList = () => {
 
     const handleChildAddedOrChanged = async (snapshot) => {
       const data = snapshot.val();
-      const feedbackRef = ref(database, `feedback/${data.uid}`);
+      const feedbackRef = ref(database, `admins/${snapshot.key}/feedback`);
       const feedbackSnapshot = await get(feedbackRef);
-      const feedbacks = feedbackSnapshot.exists()
-        ? Object.values(feedbackSnapshot.val())
-        : [];
-      const feedbackText = feedbacks.map((fb) => fb.feedback).join(", ");
+      let latestFeedback = "No feedback";
+      if (feedbackSnapshot.exists()) {
+        const feedbacks = Object.values(feedbackSnapshot.val());
+        latestFeedback =
+          feedbacks.length > 0 ? feedbacks[feedbacks.length - 1] : "No feedback";
+      }
 
       setAdmins((prevAdmins) => {
         const existingIndex = prevAdmins.findIndex(
@@ -126,13 +124,13 @@ const AdminList = () => {
           updatedAdmins[existingIndex] = {
             id: snapshot.key,
             ...data,
-            feedback: feedbackText,
+            feedback: latestFeedback,
           };
           return updatedAdmins;
         } else {
           return [
             ...prevAdmins,
-            { id: snapshot.key, ...data, feedback: feedbackText },
+            { id: snapshot.key, ...data, feedback: latestFeedback },
           ];
         }
       });
