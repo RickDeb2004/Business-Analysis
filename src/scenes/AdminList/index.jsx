@@ -54,67 +54,57 @@ const AdminList = () => {
   const [error, setError] = useState("");
   const navigate = useNavigate();
 
-  useEffect(() => {
-    const fetchAdmins = async () => {
-
-      const adminsRef = ref(database, "admins");
-
-      const snapshot = await get(adminsRef);
-      if (snapshot.exists()) {
-        const users = snapshot.val();
-
-        const adminList = Object.keys(users).map((key) => ({
-          id: key,
-          ...users[key],
-        }));
-
-        // Fetch feedbacks and merge with admin data
-        const feedbackRef = ref(database, "feedback");
-        const feedbackSnapshot = await get(feedbackRef);
-        const feedbackData = feedbackSnapshot.exists()
-          ? feedbackSnapshot.val()
-          : {};
-
-        // console.log(feedbackData)
-        const adminListWithFeedback = adminList.map((admin) => {
-          // console.log(admin.uid)
-          const adminFeedbacks = feedbackData[admin.uid]
-            ? Object.values(feedbackData[admin.uid])
-            : [];
-          // console.log(adminFeedbacks)
-          // Get the most recent feedback
-          const length = adminFeedbacks.length;
-          const latestFeedback = length > 0 ? adminFeedbacks[length - 1] : null;
-
-          return {
-            ...admin,
-            feedback: latestFeedback ? latestFeedback.feedback : "No feedback",
-          };
-        });
-
-        setAdmins(adminListWithFeedback);
-
-        // Get the current user's ID and role
-        const currentUserId = auth.currentUser.uid;
-
-        const roleMailRef = ref(database, `rolemail/${currentUserId}`);
-        const roleMailSnapshot = await get(roleMailRef);
-        if (roleMailSnapshot.exists()) {
-          const currentUserData = roleMailSnapshot.val();
-
-          setCurrentUserRole(currentUserData.role);
-
-        }
-      }
-    };
-    fetchAdmins();
-  }, []);
-
-  useEffect(() => {
-
+useEffect(() => {
+  const fetchAdmins = async () => {
     const adminsRef = ref(database, "admins");
+    const snapshot = await get(adminsRef);
+    if (snapshot.exists()) {
+      const users = snapshot.val();
+
+      const adminList = Object.keys(users).map((key) => ({
+        id: key,
+        ...users[key],
+      }));
+
+      // Fetch feedbacks and merge with admin data
+      const feedbackRef = ref(database, "feedback");
+      const feedbackSnapshot = await get(feedbackRef);
+      const feedbackData = feedbackSnapshot.exists()
+        ? feedbackSnapshot.val()
+        : {};
+
+      const adminListWithFeedback = adminList.map((admin) => {
+        const adminFeedbacks = feedbackData[admin.uid]
+          ? Object.values(feedbackData[admin.uid])
+          : [];
+        const length = adminFeedbacks.length;
+        const latestFeedback = length > 0 ? adminFeedbacks[length - 1] : null;
+
+        return {
+          ...admin,
+          feedback: latestFeedback ? latestFeedback.feedback : "No feedback",
+        };
+      });
+
+      setAdmins(adminListWithFeedback);
+
+      // Get the current user's ID and role
+      const currentUserId = auth.currentUser.uid;
+      const roleMailRef = ref(database, `rolemail/${currentUserId}`);
+      const roleMailSnapshot = await get(roleMailRef);
+      if (roleMailSnapshot.exists()) {
+        const currentUserData = roleMailSnapshot.val();
+        setCurrentUserRole(currentUserData.role);
+      }
+    }
+  };
+  fetchAdmins();
+}, []);
 
 
+  useEffect(() => {
+    const adminsRef = ref(database, "admins");
+  
     const handleChildAddedOrChanged = async (snapshot) => {
       const data = snapshot.val();
       const feedbackRef = ref(database, `feedback/${data.uid}`);
@@ -123,7 +113,7 @@ const AdminList = () => {
         ? Object.values(feedbackSnapshot.val())
         : [];
       const feedbackText = feedbacks.map((fb) => fb.feedback).join(", ");
-
+  
       setAdmins((prevAdmins) => {
         const existingIndex = prevAdmins.findIndex(
           (item) => item.id === snapshot.key
@@ -144,31 +134,25 @@ const AdminList = () => {
         }
       });
     };
-
+  
     const handleChildRemoved = (snapshot) => {
       setAdmins((prevAdmins) =>
         prevAdmins.filter((item) => item.id !== snapshot.key)
       );
     };
-
-    const childAddedListener = onChildAdded(
-
-      adminsRef,
-      handleChildAddedOrChanged
-    );
-    const childChangedListener = onChildChanged(
-      adminsRef,
-      handleChildAddedOrChanged
-    );
-    const childRemovedListener = onChildRemoved(adminsRef, handleChildRemoved);
-
+  
+    onChildAdded(adminsRef, handleChildAddedOrChanged);
+    onChildChanged(adminsRef, handleChildAddedOrChanged);
+    onChildRemoved(adminsRef, handleChildRemoved);
+  
+    // Clean up listeners
     return () => {
-      off(adminsRef, "child_added", childAddedListener);
-      off(adminsRef, "child_changed", childChangedListener);
-      off(adminsRef, "child_removed", childRemovedListener);
-
+      off(adminsRef, "child_added", handleChildAddedOrChanged);
+      off(adminsRef, "child_changed", handleChildAddedOrChanged);
+      off(adminsRef, "child_removed", handleChildRemoved);
     };
   }, []);
+  
 
   const handleDelete = async (id) => {
     try {
@@ -251,46 +235,23 @@ const AdminList = () => {
   };
 
   const columns = [
-    { field: "id", headerName: "ID", flex: 0.5 },
-    { field: "name", headerName: "Name", flex: 0.75 },
+    { field: "id", headerName: "ID", flex: 1 },
+    { field: "name", headerName: "Name", flex: 0.8 },
     { field: "email", headerName: "Email", flex: 1 },
-
-
-
-    { field: "feedback", headerName: "Feedback", flex: 2 },
+    { field: "feedback", headerName: "Feedback", flex: 1.6 },
     {
       field: "actions",
       headerName: "Actions",
       flex: 1,
       renderCell: (params) => (
         <>
-
-          <>
-            <IconButton
-              color="secondary"
-              sx={{ marginRight: 1, color: colors.redAccent[600] }}
-              onClick={() => handleDelete(params.id)}
-            >
-              <DeleteIcon />
-            </IconButton>
-          </>
-        </>
-      ),
-    },
-    {
-      field: "chat",
-      headerName: "Chat",
-      flex: 0.5,
-      renderCell: (params) => (
-        <>
           <IconButton
-            color="primary"
-            sx={{ color: "#ffffff" }}
-            onClick={() => handleChat(params.id)}
+            color="secondary"
+            sx={{ marginRight: 1, color: colors.redAccent[600] }}
+            onClick={() => handleDelete(params.id)}
           >
-            <ChatIcon />
+            <DeleteIcon />
           </IconButton>
-
         </>
       ),
     },
@@ -313,6 +274,7 @@ const AdminList = () => {
       ),
     },
   ];
+  
   const handleSendMessage = async () => {
     if (chatMessage.trim() === "") return;
     const newMessageRef = ref(
