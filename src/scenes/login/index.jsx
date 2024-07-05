@@ -30,8 +30,8 @@ const Login = ({ handleLoginSuccess }) => {
       const roleMailRef = ref(database, "rolemail");
 
       const roleMailSnapshot = await get(roleMailRef);
-      console.log("roleMailRef", roleMailRef);
-      console.log("roleMailSnapshot", roleMailSnapshot);
+      // console.log("roleMailRef", roleMailRef);
+      // console.log("roleMailSnapshot", roleMailSnapshot);
 
       if (roleMailSnapshot.exists()) {
         const roleMailData = roleMailSnapshot.val();
@@ -96,7 +96,7 @@ const Login = ({ handleLoginSuccess }) => {
           } else if (role === "user") {
             // For admin, check the password in the admins node
             const useridSplit = userId.split("_")[0];
-            console.log("useridSplit", useridSplit);
+            // console.log("useridSplit", useridSplit);
             const useRef = ref(
               database,
               "userList/" + useridSplit + "/" + userId
@@ -121,6 +121,19 @@ const Login = ({ handleLoginSuccess }) => {
                   "user",
                   JSON.stringify({ uid: userId, role })
                 );
+                // update the signInTime
+                const hour = new Date().getHours();
+                const minute = new Date().getMinutes();
+                const signInTime = `${hour}:${minute}`;
+                const DateMonth = new Date().getMonth();
+                const DateDay = new Date().getDate();
+                const loginTime = `${signInTime} - ${DateMonth}/${DateDay}`;
+                console.log("loginTime", loginTime);
+                const signInTimeRef = ref(
+                  database,
+                  "userList/" + useridSplit + "/" + userId + "/signInTime"
+                );
+                await set(signInTimeRef, loginTime);
                 return;
               } else {
                 setError("Invalid user credentials");
