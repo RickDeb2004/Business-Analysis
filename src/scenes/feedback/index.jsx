@@ -8,25 +8,32 @@ import {
   useTheme,
 } from "@mui/material";
 import { getAuth } from "firebase/auth";
+
 import { get, ref, update, onValue } from "firebase/database";
+
 import { useEffect, useState } from "react";
 import { database } from "../../firebase";
 import { tokens } from "../../theme";
 import Header from "../../components/Header";
+
 import TypewriterEffectSmooth from "../../components/TypeWriterEffect";
+
 
 const Feedback = () => {
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
+
   const [feedback, setFeedback] = useState("");
   const [userFeedbacks, setUserFeedbacks] = useState([]);
   const [userInfo, setUserInfo] = useState({});
 
   useEffect(() => {
+
     const fetchUserFeedbacks = () => {
       const auth = getAuth();
       const user = auth.currentUser;
       if (user) {
+
         const feedbackRef = ref(database, `admins/${user.uid}`);
         onValue(feedbackRef, (snapshot) => {
           const data = snapshot.val();
@@ -42,6 +49,7 @@ const Feedback = () => {
       }
     };
 
+
     fetchUserFeedbacks();
   }, []);
 
@@ -49,6 +57,7 @@ const Feedback = () => {
     const auth = getAuth();
     const user = auth.currentUser;
     if (user) {
+
       const feedbackRef = ref(database, `admins/${user.uid}`);
       const snapshot = await get(feedbackRef);
       if (snapshot.exists()) {
@@ -59,6 +68,7 @@ const Feedback = () => {
         });
         setFeedback("");
       }
+
     }
   };
 
@@ -67,7 +77,9 @@ const Feedback = () => {
       <Header
         title={
           <TypewriterEffectSmooth
+
             words={[{ text: "Feed Back", className: "text-blue-500" }]}
+
           />
         }
         subtitle="Every improvement starts with a feedback"
@@ -85,8 +97,10 @@ const Feedback = () => {
         sx={{
           border: `2px solid ${colors.grey[600]}`,
           boxShadow: `0 0 10px ${colors.grey[600]}`,
+
           "@media (prefers-color-scheme: dark)": {
             bgcolor: "#18181b", // Equivalent to dark:bg-zinc-900
+
           },
         }}
       >
@@ -130,9 +144,11 @@ const Feedback = () => {
         <Typography variant="h4" mb="20px">
           Previous Feedback
         </Typography>
+
         {userFeedbacks.map((feedback, index) => (
           <Card
             key={index}
+
             sx={{
               p: "20px",
               mb: "20px",
@@ -156,6 +172,7 @@ const Feedback = () => {
             >
               <Box display="flex" alignItems="center">
                 <Avatar sx={{ width: 40, height: 40, mr: 2 }}>
+
                   {userInfo.name.charAt(0)}
                 </Avatar>
                 <Box>
@@ -169,6 +186,7 @@ const Feedback = () => {
             </Box>
             <Typography variant="body2" mt="10px" color={colors.grey[100]}>
               {feedback}
+
             </Typography>
           </Card>
         ))}
@@ -177,4 +195,6 @@ const Feedback = () => {
   );
 };
 
+
 export default Feedback;
+

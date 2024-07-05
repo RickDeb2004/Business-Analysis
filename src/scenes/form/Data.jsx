@@ -51,6 +51,7 @@ const SectionTitle = styled(Typography)(({ theme }) => ({
 }));
 
 const SubmissionList = ({ formSubmissions, handleEditForm }) => {
+
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
 
@@ -276,3 +277,4 @@ const SubmissionList = ({ formSubmissions, handleEditForm }) => {
 };
 
 export default SubmissionList;
+

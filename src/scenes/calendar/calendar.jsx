@@ -14,7 +14,9 @@ import {
 } from "@mui/material";
 import Header from "../../components/Header";
 import { tokens } from "../../theme";
+
 import { database, auth } from "../../firebase";
+
 import { ref, set, get, remove } from "firebase/database";
 import EventDialog from "../../components/EventDialouge"; // Adjust the import path if necessary
 import GradientBox from "../../components/GradientBox";
@@ -25,6 +27,7 @@ const Calendar = () => {
   const [currentEvents, setCurrentEvents] = useState([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState(null);
+
   const user = auth.currentUser;
 
   // Fetch events from Firebase when the component mounts
@@ -48,14 +51,17 @@ const Calendar = () => {
       const eventRef = ref(database, `events/${user.uid}/${event.id}`);
       await set(eventRef, event);
     }
+
   };
 
   // Remove event from Firebase
   const removeEventFromFirebase = async (eventId) => {
+
     if (user) {
       const eventRef = ref(database, `events/${user.uid}/${eventId}`);
       await remove(eventRef);
     }
+
   };
 
   // Handle date click
@@ -108,8 +114,10 @@ const Calendar = () => {
           p="15px"
           borderRadius="4px"
           sx={{
+
             border: `1px solid ${colors.purpleAccent[600]}`,
             boxShadow: `0 0 3px ${colors.purpleAccent[600]}`,
+
           }}
         >
           <Typography variant="h5">Events</Typography>
@@ -120,8 +128,10 @@ const Calendar = () => {
                 sx={{
                   backgroundColor: `linear-gradient(135deg, ${colors.tealAccent[600]} 30%, ${colors.greenAccent[600]} 100%)`,
                   margin: "10px 0",
+
                   border: `2px solid ${colors.tealAccent[600]}`,
                   boxShadow: `0 0 10px ${colors.tealAccent[600]}`,
+
                 }}
               >
                 <ListItemText

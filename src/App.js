@@ -20,7 +20,9 @@ import Feedback from "./scenes/feedback";
 import Notifications from "./components/Notification";
  // Import the new page component
 import Page from "./components/Pages";
+
 import { auth } from "./firebase";
+
 function App() {
   const [theme, colorMode] = useMode();
   const [isSidebarVisible, setSidebarVisible] = useState(false);
@@ -29,6 +31,7 @@ function App() {
 
   const navigate = useNavigate();
   const location = useLocation();
+
 
   // useEffect(() => {
   //   const storedUser = JSON.parse(localStorage.getItem("user"));
@@ -78,6 +81,7 @@ function App() {
     }
   }, [isSidebarVisible]);
 
+
   const handleLoginSuccess = (role) => {
     setLoggedIn(true);
     setUserRole(role);
@@ -90,6 +94,7 @@ function App() {
       navigate("/dashboard");
     }
   };
+
 
   // const handleLogout = () => {
   //   setLoggedIn(false);
@@ -112,6 +117,7 @@ function App() {
 
 
   
+
 
   const showTopbar = isLoggedIn && location.pathname !== "/";
 

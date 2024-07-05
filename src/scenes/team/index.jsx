@@ -48,6 +48,7 @@ const Team = () => {
     role: "user",
   });
   const [currentUserRole, setCurrentUserRole] = useState(null);
+
   const [adminName, setAdminName] = useState("");
   const [adminID, setAdminID] = useState("");
 
@@ -70,6 +71,7 @@ const Team = () => {
       };
 
       getAdminData();
+
     }
   }, [user]);
 
@@ -134,6 +136,7 @@ const Team = () => {
       ),
     },
   ];
+
 
   columns.push({
     field: "blocked",
@@ -211,6 +214,7 @@ const Team = () => {
 
   const handleBlockUser = async (userId, blockStatus) => {
     const userRef = ref(database, `userList/${adminID}/${userId}`);
+
     await update(userRef, { blocked: blockStatus });
   };
 
@@ -232,6 +236,7 @@ const Team = () => {
   };
 
   const handleFormSubmit = async () => {
+
     const userData = {
       email: formData.email,
       password: formData.password,
@@ -274,6 +279,7 @@ const Team = () => {
       );
     } catch (error) {
       console.error("Error deleting user:", error);
+
     }
   };
   const lampEffectStyle = {

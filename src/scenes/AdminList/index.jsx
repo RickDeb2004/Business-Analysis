@@ -44,17 +44,21 @@ const AdminList = () => {
     role: "admin",
   });
   const [openChatDialog, setOpenChatDialog] = useState(false);
+
   const [chatMessage, setChatMessage] = useState("");
   const [selectedAdminId, setSelectedAdminId] = useState(null);
   const [unreadMessagesCount, setUnreadMessagesCount] = useState(0);
   const [messages, setMessages] = useState([]);
+
 
   const [error, setError] = useState("");
   const navigate = useNavigate();
 
   useEffect(() => {
     const fetchAdmins = async () => {
+
       const adminsRef = ref(database, "admins");
+
       const snapshot = await get(adminsRef);
       if (snapshot.exists()) {
         const users = snapshot.val();
@@ -92,12 +96,14 @@ const AdminList = () => {
 
         // Get the current user's ID and role
         const currentUserId = auth.currentUser.uid;
+
         const roleMailRef = ref(database, `rolemail/${currentUserId}`);
         const roleMailSnapshot = await get(roleMailRef);
         if (roleMailSnapshot.exists()) {
           const currentUserData = roleMailSnapshot.val();
 
           setCurrentUserRole(currentUserData.role);
+
         }
       }
     };
@@ -105,7 +111,9 @@ const AdminList = () => {
   }, []);
 
   useEffect(() => {
+
     const adminsRef = ref(database, "admins");
+
 
     const handleChildAddedOrChanged = async (snapshot) => {
       const data = snapshot.val();
@@ -144,6 +152,7 @@ const AdminList = () => {
     };
 
     const childAddedListener = onChildAdded(
+
       adminsRef,
       handleChildAddedOrChanged
     );
@@ -157,12 +166,15 @@ const AdminList = () => {
       off(adminsRef, "child_added", childAddedListener);
       off(adminsRef, "child_changed", childChangedListener);
       off(adminsRef, "child_removed", childRemovedListener);
+
     };
   }, []);
 
   const handleDelete = async (id) => {
     try {
+
       await remove(ref(database, `admins/${id}`));
+
       setAdmins(admins.filter((admin) => admin.id !== id));
     } catch (error) {
       console.error("Error deleting admin:", error);
@@ -171,7 +183,9 @@ const AdminList = () => {
 
   const handleChat = (id) => {
     setSelectedAdminId(id);
+
     setOpenChatDialog(true);
+
   };
 
   const handleDialogOpen = () => {
@@ -186,6 +200,7 @@ const AdminList = () => {
 
   const handleFormSubmit = async () => {
     try {
+
       const roleMailRef = ref(database, "rolemail");
       const roleMailSnapshot = await get(roleMailRef);
       const roleMailData = roleMailSnapshot.exists()
@@ -197,6 +212,7 @@ const AdminList = () => {
         Object.values(roleMailData).some(
           (entry) => entry.email === formData.email
         )
+
       ) {
         setError("Email already in use");
         return;
@@ -210,6 +226,7 @@ const AdminList = () => {
       );
       const user = userCredential.user;
 
+
       // Add the new admin role and email to the rolemail ref
       await set(ref(database, `rolemail/${user.uid}`), {
         email: formData.email,
@@ -222,6 +239,7 @@ const AdminList = () => {
         email: formData.email,
         password: formData.password,
         role: formData.role,
+
       });
 
       // Close the dialog and reset the form
@@ -237,6 +255,8 @@ const AdminList = () => {
     { field: "name", headerName: "Name", flex: 0.75 },
     { field: "email", headerName: "Email", flex: 1 },
 
+
+
     { field: "feedback", headerName: "Feedback", flex: 2 },
     {
       field: "actions",
@@ -244,6 +264,7 @@ const AdminList = () => {
       flex: 1,
       renderCell: (params) => (
         <>
+
           <>
             <IconButton
               color="secondary"
@@ -269,13 +290,31 @@ const AdminList = () => {
           >
             <ChatIcon />
           </IconButton>
+
+        </>
+      ),
+    },
+    {
+      field: "chat",
+      headerName: "Chat",
+      flex: 0.5,
+      renderCell: (params) => (
+        <>
+          {currentUserRole === "superadmin" && (
+            <IconButton
+              color="primary"
+              sx={{ color: "#ffffff" }}
+              onClick={() => handleChat(params.id)}
+            >
+              <ChatIcon />
+            </IconButton>
+          )}
         </>
       ),
     },
   ];
   const handleSendMessage = async () => {
     if (chatMessage.trim() === "") return;
-
     const newMessageRef = ref(
       database,
       `messages/${selectedAdminId}/${Date.now()}`
@@ -459,6 +498,7 @@ const AdminList = () => {
         </DialogActions>
       </Dialog>
       <Dialog open={openChatDialog} onClose={() => setOpenChatDialog(false)}>
+
         <DialogTitle
           sx={{ backgroundColor: "#000000", color: colors.yellowAccent[600] }}
         >
@@ -491,6 +531,7 @@ const AdminList = () => {
           </Button>
         </DialogActions>
       </Dialog>
+
     </Box>
   );
 };

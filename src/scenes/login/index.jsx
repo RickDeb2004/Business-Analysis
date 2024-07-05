@@ -13,15 +13,18 @@ const Login = ({ handleLoginSuccess }) => {
   const [error, setError] = useState("");
   const [userUID, setUserUID] = useState("");
 
+
+
   const handleLogin = async () => {
     try {
-      // Sign in with email and password
+
       const userCredential = await signInWithEmailAndPassword(
         auth,
         email,
         password
       );
       const user = userCredential.user;
+
 
       // Fetch the role from the rolemail node
       const roleMailRef = ref(database, "rolemail");
@@ -138,6 +141,7 @@ const Login = ({ handleLoginSuccess }) => {
       } else {
         setError("No role data found");
         return;
+
       }
     } catch (error) {
       setError(error.message);
