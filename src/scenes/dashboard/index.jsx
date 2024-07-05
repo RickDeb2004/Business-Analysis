@@ -63,7 +63,6 @@ const Dashboard = () => {
           db,
 
           `admins/${auth.currentUser.uid}/formData/salesPerUnit`
-
         );
         const snapshot = await get(dataRef);
 
@@ -106,7 +105,6 @@ const Dashboard = () => {
         console.log(
           "Fetching data from path:",
           `admins/${auth.currentUser.uid}/formData/salesPerUnit`
-
         );
 
         const snapshot = await get(salesPerUnitRef);
@@ -260,7 +258,7 @@ const Dashboard = () => {
           justifyContent="center"
           sx={{
             border: `2px solid ${colors.tealAccent[600]}`,
-            boxShadow: `0 0 10px ${colors.tealAccent[600]}`,
+            boxShadow: `0 0 5px ${colors.tealAccent[600]}`,
             "@media (prefers-color-scheme: dark)": {
               bgcolor: "#18181b", // Equivalent to dark:bg-zinc-900
             },
@@ -286,7 +284,7 @@ const Dashboard = () => {
           justifyContent="center"
           sx={{
             border: `2px solid ${colors.purpleAccent[600]}`,
-            boxShadow: `0 0 10px ${colors.purpleAccent[600]}`,
+            boxShadow: `0 0 5px ${colors.purpleAccent[600]}`,
             "@media (prefers-color-scheme: dark)": {
               bgcolor: "#18181b", // Equivalent to dark:bg-zinc-900
             },
@@ -312,7 +310,7 @@ const Dashboard = () => {
           justifyContent="center"
           sx={{
             border: `2px solid ${colors.tealAccent[600]}`,
-            boxShadow: `0 0 10px ${colors.tealAccent[600]}`,
+            boxShadow: `0 0 5px ${colors.tealAccent[600]}`,
             "@media (prefers-color-scheme: dark)": {
               bgcolor: "#18181b", // Equivalent to dark:bg-zinc-900
             },
@@ -338,7 +336,7 @@ const Dashboard = () => {
           id="line-chart"
           sx={{
             border: `2px solid ${colors.tealAccent[600]}`,
-            boxShadow: `0 0 10px ${colors.tealAccent[600]}`,
+            boxShadow: `0 0 5px ${colors.tealAccent[600]}`,
             "@media (prefers-color-scheme: dark)": {
               bgcolor: "#18181b", // Equivalent to dark:bg-zinc-900
             },
@@ -386,7 +384,7 @@ const Dashboard = () => {
           overflow="auto"
           sx={{
             border: `2px solid ${colors.tealAccent[600]}`,
-            boxShadow: `0 0 10px ${colors.tealAccent[600]}`,
+            boxShadow: `0 0 5px ${colors.tealAccent[600]}`,
             "@media (prefers-color-scheme: dark)": {
               bgcolor: "#18181b", // Equivalent to dark:bg-zinc-900
             },
@@ -414,7 +412,7 @@ const Dashboard = () => {
               p="15px"
               sx={{
                 border: `2px solid ${colors.grey[600]}`,
-                boxShadow: `0 0 10px ${colors.grey[600]}`,
+                boxShadow: `0 0 5px ${colors.grey[600]}`,
               }}
             >
               <Box>
@@ -449,7 +447,7 @@ const Dashboard = () => {
           p="30px"
           sx={{
             border: `2px solid ${colors.tealAccent[600]}`,
-            boxShadow: `0 0 10px ${colors.tealAccent[600]}`,
+            boxShadow: `0 0 5px ${colors.tealAccent[600]}`,
             "@media (prefers-color-scheme: dark)": {
               bgcolor: "#18181b", // Equivalent to dark:bg-zinc-900
             },
@@ -482,7 +480,7 @@ const Dashboard = () => {
           id="bar-chart"
           sx={{
             border: `2px solid ${colors.tealAccent[600]}`,
-            boxShadow: `0 0 10px ${colors.tealAccent[600]}`,
+            boxShadow: `0 0 5px ${colors.tealAccent[600]}`,
             "@media (prefers-color-scheme: dark)": {
               bgcolor: "#18181b", // Equivalent to dark:bg-zinc-900
             },
@@ -507,7 +505,7 @@ const Dashboard = () => {
           id="geo-chart"
           sx={{
             border: `2px solid ${colors.tealAccent[600]}`,
-            boxShadow: `0 0 10px ${colors.tealAccent[600]}`,
+            boxShadow: `0 0 5px ${colors.tealAccent[600]}`,
             "@media (prefers-color-scheme: dark)": {
               bgcolor: "#18181b", // Equivalent to dark:bg-zinc-900
             },
