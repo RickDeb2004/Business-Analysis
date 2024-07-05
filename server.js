@@ -1,18 +1,25 @@
 const express = require('express');
+const http = require('http');
 const admin = require('firebase-admin');
 const bodyParser = require('body-parser');
 const cors = require('cors');
-
+const socketIo = require('socket.io');
 
 // Initialize Firebase Admin SDK
 const serviceAccount = require('./serviceAccountKey.json');
-
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
   databaseURL: "https://buisness-bf4ca-default-rtdb.firebaseio.com"
 });
 
 const app = express();
+const server = http.createServer(app);
+const io = socketIo(server, {
+  cors: {
+    origin: '*',
+  }
+});
+
 app.use(cors());
 app.use(bodyParser.json());
 
@@ -62,6 +69,29 @@ app.post('/create-user', authenticate, async (req, res) => {
   }
 });
 
-app.listen(PORT, () => {
+// Handle socket connections
+io.on('connection', (socket) => {
+  console.log('New client connected');
+
+  socket.on('joinRoom', ({ adminId }) => {
+    socket.join(adminId);
+  });
+
+  socket.on('sendMessage', ({ adminId, message }) => {
+    const messageRef = admin.database().ref(`chats/${adminId}`).push();
+    messageRef.set({
+      message,
+      timestamp: Date.now(),
+      sentByMe: true,
+    });
+    io.to(adminId).emit('receiveMessage', { message, timestamp: Date.now(), sentByMe: true });
+  });
+
+  socket.on('disconnect', () => {
+    console.log('Client disconnected');
+  });
+});
+
+server.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });

@@ -30,6 +30,7 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import ChatIcon from "@mui/icons-material/Chat";
 import { useNavigate } from "react-router-dom";
 import { createUserWithEmailAndPassword } from "firebase/auth";
+import Notifications from "../../components/Notification";
 
 const AdminList = () => {
   const theme = useTheme();
@@ -50,13 +51,11 @@ const AdminList = () => {
   const [unreadMessagesCount, setUnreadMessagesCount] = useState(0);
   const [messages, setMessages] = useState([]);
 
-
   const [error, setError] = useState("");
   const navigate = useNavigate();
 
   useEffect(() => {
     const fetchAdmins = async () => {
-
       const adminsRef = ref(database, "admins");
 
       const snapshot = await get(adminsRef);
@@ -103,7 +102,6 @@ const AdminList = () => {
           const currentUserData = roleMailSnapshot.val();
 
           setCurrentUserRole(currentUserData.role);
-
         }
       }
     };
@@ -111,9 +109,7 @@ const AdminList = () => {
   }, []);
 
   useEffect(() => {
-
     const adminsRef = ref(database, "admins");
-
 
     const handleChildAddedOrChanged = async (snapshot) => {
       const data = snapshot.val();
@@ -152,7 +148,6 @@ const AdminList = () => {
     };
 
     const childAddedListener = onChildAdded(
-
       adminsRef,
       handleChildAddedOrChanged
     );
@@ -166,13 +161,11 @@ const AdminList = () => {
       off(adminsRef, "child_added", childAddedListener);
       off(adminsRef, "child_changed", childChangedListener);
       off(adminsRef, "child_removed", childRemovedListener);
-
     };
   }, []);
 
   const handleDelete = async (id) => {
     try {
-
       await remove(ref(database, `admins/${id}`));
 
       setAdmins(admins.filter((admin) => admin.id !== id));
@@ -183,9 +176,7 @@ const AdminList = () => {
 
   const handleChat = (id) => {
     setSelectedAdminId(id);
-
-    setOpenChatDialog(true);
-
+    navigate(`/notifications/${id}`); // Navigate to the Notifications component with the selected admin ID
   };
 
   const handleDialogOpen = () => {
@@ -200,7 +191,6 @@ const AdminList = () => {
 
   const handleFormSubmit = async () => {
     try {
-
       const roleMailRef = ref(database, "rolemail");
       const roleMailSnapshot = await get(roleMailRef);
       const roleMailData = roleMailSnapshot.exists()
@@ -212,7 +202,6 @@ const AdminList = () => {
         Object.values(roleMailData).some(
           (entry) => entry.email === formData.email
         )
-
       ) {
         setError("Email already in use");
         return;
@@ -226,7 +215,6 @@ const AdminList = () => {
       );
       const user = userCredential.user;
 
-
       // Add the new admin role and email to the rolemail ref
       await set(ref(database, `rolemail/${user.uid}`), {
         email: formData.email,
@@ -239,7 +227,6 @@ const AdminList = () => {
         email: formData.email,
         password: formData.password,
         role: formData.role,
-
       });
 
       // Close the dialog and reset the form
@@ -255,8 +242,6 @@ const AdminList = () => {
     { field: "name", headerName: "Name", flex: 0.75 },
     { field: "email", headerName: "Email", flex: 1 },
 
-
-
     { field: "feedback", headerName: "Feedback", flex: 2 },
     {
       field: "actions",
@@ -264,7 +249,6 @@ const AdminList = () => {
       flex: 1,
       renderCell: (params) => (
         <>
-
           <>
             <IconButton
               color="secondary"
@@ -290,7 +274,6 @@ const AdminList = () => {
           >
             <ChatIcon />
           </IconButton>
-
         </>
       ),
     },
@@ -498,8 +481,8 @@ const AdminList = () => {
         </DialogActions>
       </Dialog>
       <Dialog open={openChatDialog} onClose={() => setOpenChatDialog(false)}>
-
-        <DialogTitle
+        <DialogContent>
+          {/* <DialogTitle
           sx={{ backgroundColor: "#000000", color: colors.yellowAccent[600] }}
         >
           Send Message
@@ -520,18 +503,18 @@ const AdminList = () => {
                 boxShadow: "0px 0px 8px 2px rgba(33,150,243,0.5)",
               },
             }}
-          />
+          /> */}
+          <Notifications selectedAdminId={selectedAdminId} />
         </DialogContent>
-        <DialogActions sx={{ backgroundColor: "#000000" }}>
+        {/* <DialogActions sx={{ backgroundColor: "#000000" }}>
           <Button onClick={() => setOpenChatDialog(false)} color="secondary">
             Cancel
           </Button>
           <Button onClick={handleSendMessage} color="info">
             Send
           </Button>
-        </DialogActions>
+        </DialogActions> */}
       </Dialog>
-
     </Box>
   );
 };
