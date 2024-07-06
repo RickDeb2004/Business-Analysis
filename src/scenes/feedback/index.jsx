@@ -6,6 +6,7 @@ import {
   Avatar,
   Card,
   useTheme,
+  IconButton,
 } from "@mui/material";
 import { getAuth } from "firebase/auth";
 
@@ -15,9 +16,9 @@ import { useEffect, useState } from "react";
 import { database } from "../../firebase";
 import { tokens } from "../../theme";
 import Header from "../../components/Header";
+import DeleteIcon from "@mui/icons-material/Delete";
 
 import TypewriterEffectSmooth from "../../components/TypeWriterEffect";
-
 
 const Feedback = () => {
   const theme = useTheme();
@@ -28,17 +29,17 @@ const Feedback = () => {
   const [userInfo, setUserInfo] = useState({});
 
   useEffect(() => {
-
     const fetchUserFeedbacks = () => {
       const auth = getAuth();
       const user = auth.currentUser;
       if (user) {
-
         const feedbackRef = ref(database, `admins/${user.uid}`);
         onValue(feedbackRef, (snapshot) => {
           const data = snapshot.val();
           if (data) {
-            setUserFeedbacks(data.feedback || []);
+            const feedbacks = data.feedback || [];
+            const latestFeedbacks = feedbacks.slice(-5).reverse();
+            setUserFeedbacks(latestFeedbacks);
             setUserInfo({
               name: data.name || "Anonymous",
               email: data.email,
@@ -49,7 +50,6 @@ const Feedback = () => {
       }
     };
 
-
     fetchUserFeedbacks();
   }, []);
 
@@ -57,7 +57,6 @@ const Feedback = () => {
     const auth = getAuth();
     const user = auth.currentUser;
     if (user) {
-
       const feedbackRef = ref(database, `admins/${user.uid}`);
       const snapshot = await get(feedbackRef);
       if (snapshot.exists()) {
@@ -68,7 +67,25 @@ const Feedback = () => {
         });
         setFeedback("");
       }
+    }
+  };
 
+  const handleDelete = async (index) => {
+    const auth = getAuth();
+    const user = auth.currentUser;
+    if (user) {
+      const feedbackRef = ref(database, `admins/${user.uid}`);
+      const snapshot = await get(feedbackRef);
+      if (snapshot.exists()) {
+        const adminData = snapshot.val();
+        const updatedFeedbacks = adminData.feedback.filter(
+          (_, i) => i !== index
+        );
+        await update(feedbackRef, {
+          feedback: updatedFeedbacks,
+        });
+        setUserFeedbacks(updatedFeedbacks.slice(-5));
+      }
     }
   };
 
@@ -77,9 +94,7 @@ const Feedback = () => {
       <Header
         title={
           <TypewriterEffectSmooth
-
             words={[{ text: "Feed Back", className: "text-blue-500" }]}
-
           />
         }
         subtitle="Every improvement starts with a feedback"
@@ -100,7 +115,6 @@ const Feedback = () => {
 
           "@media (prefers-color-scheme: dark)": {
             bgcolor: "#18181b", // Equivalent to dark:bg-zinc-900
-
           },
         }}
       >
@@ -148,7 +162,6 @@ const Feedback = () => {
         {userFeedbacks.map((feedback, index) => (
           <Card
             key={index}
-
             sx={{
               p: "20px",
               mb: "20px",
@@ -172,7 +185,6 @@ const Feedback = () => {
             >
               <Box display="flex" alignItems="center">
                 <Avatar sx={{ width: 40, height: 40, mr: 2 }}>
-
                   {userInfo.name.charAt(0)}
                 </Avatar>
                 <Box>
@@ -182,11 +194,13 @@ const Feedback = () => {
                   </Typography>
                 </Box>
               </Box>
-              <Typography variant="body2">{userInfo.role}</Typography>
+
+              <IconButton onClick={() => handleDelete(index)} sx={{ mb: 0.2 }}>
+                <DeleteIcon />
+              </IconButton>
             </Box>
             <Typography variant="body2" mt="10px" color={colors.grey[100]}>
               {feedback}
-
             </Typography>
           </Card>
         ))}
@@ -195,6 +209,4 @@ const Feedback = () => {
   );
 };
 
-
 export default Feedback;
-
