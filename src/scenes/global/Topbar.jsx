@@ -6,6 +6,7 @@ import { signOut } from "firebase/auth";
 import { useEffect, useState } from "react";
 import { get, ref } from "firebase/database";
 import ChatIcon from "@mui/icons-material/Chat";
+
 const Topbar = ({ handleLogout }) => {
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
@@ -14,6 +15,7 @@ const Topbar = ({ handleLogout }) => {
   const [unreadMessagesCount, setUnreadMessagesCount] = useState(0);
   const [messages, setMessages] = useState([]);
   const [currentUserRole, setCurrentUserRole] = useState(null);
+  const [hasClickedBadge, setHasClickedBadge] = useState(false);
 
   const handleLogoutdb = async () => {
     try {
@@ -35,7 +37,6 @@ const Topbar = ({ handleLogout }) => {
     }
 
     const fetchMessagesAndUserRole = async () => {
-
       const currentUser = auth.currentUser || storedUser;
 
       if (!currentUser) {
@@ -43,44 +44,55 @@ const Topbar = ({ handleLogout }) => {
         return;
       }
 
-
       const userRef = ref(database, `rolemail/${currentUser.uid}`);
-
       const userSnapshot = await get(userRef);
       let userData;
       if (userSnapshot.exists()) {
         userData = userSnapshot.val();
         setCurrentUserRole(userData.role);
       }
-      
+
       if (userData && userData.role === "admin") {
-        const messagesRef = ref(database, "messages");
+        const messagesRef = ref(database, "chats");
         const snapshot = await get(messagesRef);
         if (snapshot.exists()) {
           const messagesData = snapshot.val();
-          const allMessages = Object.values(messagesData).flatMap((userMessages) =>
-            Object.values(userMessages)
+          const allMessages = Object.values(messagesData).flatMap(
+            (userMessages) => Object.values(userMessages)
           );
-          setMessages(allMessages);
-          setUnreadMessagesCount(allMessages.length); // Update this logic to count only unread messages if necessary
+          const superAdminMessages = allMessages.filter(
+            (message) => message.sender === "superadmin"
+          );
+          if (!hasClickedBadge) {
+            setUnreadMessagesCount(superAdminMessages.length);
+          }
+        } else {
+          setUnreadMessagesCount(0); // No messages in the database
         }
       }
     };
 
     fetchMessagesAndUserRole();
+  }, [handleLogout, navigate, hasClickedBadge]);
 
-  }, [handleLogout]);
-
+  const handleIconClick = () => {
+    setUnreadMessagesCount(0);
+    setHasClickedBadge(true);
+    navigate("/notifications");
+  };
 
   return (
     <Box display="flex" justifyContent="flex-end" p={2}>
       {currentUserRole === "admin" && location.pathname !== "/admins" && (
         <Box mr={2}>
-        <IconButton color="inherit" onClick={() => navigate("/notifications")}>
-          <Badge badgeContent={unreadMessagesCount} color="secondary">
-            <ChatIcon />
-          </Badge>
-        </IconButton>
+          <IconButton color="inherit" onClick={handleIconClick}>
+            <Badge
+              badgeContent={Math.max(unreadMessagesCount - 1, 0)}
+              color="secondary"
+            >
+              <ChatIcon />
+            </Badge>
+          </IconButton>
         </Box>
       )}
 
