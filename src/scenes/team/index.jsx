@@ -71,7 +71,6 @@ const Team = () => {
       };
 
       getAdminData();
-
     }
   }, [user]);
 
@@ -136,7 +135,6 @@ const Team = () => {
       ),
     },
   ];
-
 
   columns.push({
     field: "blocked",
@@ -243,7 +241,7 @@ const Team = () => {
       displayName: formData.name,
       role: formData.role,
     };
-  
+
     try {
       const response = await fetch("http://localhost:3000/create-user", {
         method: "POST",
@@ -252,7 +250,7 @@ const Team = () => {
         },
         body: JSON.stringify(userData),
       });
-  
+
       if (!response.ok) {
         throw new Error("Error creating user");
       }
@@ -263,10 +261,10 @@ const Team = () => {
         email: userData.email,
         role: userData.role,
       });
-  
+
       const data = await response.json();
       console.log("User created with UID:", data.uid);
-  
+
       handleDialogClose();
     } catch (error) {
       console.error("Error:", error);
@@ -284,7 +282,6 @@ const Team = () => {
       );
     } catch (error) {
       console.error("Error deleting user:", error);
-
     }
   };
   const lampEffectStyle = {
@@ -359,6 +356,7 @@ const Team = () => {
           "& .MuiDataGrid-columnHeaders": {
             backgroundColor: colors.blueAccent[700],
             borderBottom: "none",
+            fontSize: "1rem",
           },
           "& .MuiDataGrid-virtualScroller": {
             backgroundColor: colors.primary[400],
@@ -372,6 +370,9 @@ const Team = () => {
           },
           "& .MuiDataGrid-toolbarContainer .MuiButton-text": {
             color: `${colors.grey[100]} !important`,
+          },
+          "& .MuiDataGrid-row": {
+            fontSize: "0.9rem", // Increase font size for user data
           },
         }}
       >
