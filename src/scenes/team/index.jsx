@@ -234,40 +234,61 @@ const Team = () => {
   };
 
   const handleFormSubmit = async () => {
-    const userData = {
-      uid: `${adminID}_${uuidv4()}`,
-      email: formData.email,
-      password: formData.password,
-      displayName: formData.name,
-      role: formData.role,
-    };
+    if (selectedUser) {
+      // Editing an existing user
+      const userRef = ref(database, `userList/${adminID}/${selectedUser.id}`);
+      const updatedUserData = {
+        name: formData.name,
+        email: formData.email,
+        role: formData.role,
+      };
 
-    try {
-      const response = await fetch("http://localhost:3000/create-user", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(userData),
-      });
-
-      if (!response.ok) {
-        throw new Error("Error creating user");
+      if (formData.password) {
+        updatedUserData.password = formData.password;
       }
 
-      // save to rolemail
-      const roleMailRef = ref(database, `rolemail/${userData.uid}`);
-      await set(roleMailRef, {
-        email: userData.email,
-        role: userData.role,
-      });
+      try {
+        await update(userRef, updatedUserData);
+        handleDialogClose();
+      } catch (error) {
+        console.error("Error updating user:", error);
+      }
+    } else {
+      const userData = {
+        uid: `${adminID}_${uuidv4()}`,
+        email: formData.email,
+        password: formData.password,
+        displayName: formData.name,
+        role: formData.role,
+      };
 
-      const data = await response.json();
-      console.log("User created with UID:", data.uid);
+      try {
+        const response = await fetch("http://localhost:3000/create-user", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(userData),
+        });
 
-      handleDialogClose();
-    } catch (error) {
-      console.error("Error:", error);
+        if (!response.ok) {
+          throw new Error("Error creating user");
+        }
+
+        // save to rolemail
+        const roleMailRef = ref(database, `rolemail/${userData.uid}`);
+        await set(roleMailRef, {
+          email: userData.email,
+          role: userData.role,
+        });
+
+        const data = await response.json();
+        console.log("User created with UID:", data.uid);
+
+        handleDialogClose();
+      } catch (error) {
+        console.error("Error:", error);
+      }
     }
   };
 
