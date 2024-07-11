@@ -421,10 +421,10 @@ const Dashboard = () => {
                   variant="h5"
                   fontWeight="600"
                 >
-                  {transaction.txId}
+                  {transaction.user}
                 </Typography>
                 <Typography color={colors.grey[100]}>
-                  {transaction.user}
+                  {transaction.txId}
                 </Typography>
               </Box>
               <Box color={colors.grey[100]}>{transaction.date}</Box>
