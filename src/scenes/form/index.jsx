@@ -44,7 +44,7 @@ const Form = () => {
         setFormSubmissions((prev) => [...prev, values]);
       }
 
-      set(ref(database, "users/" + user.uid + "/formData"), values)
+      set(ref(database, "admins/" + user.uid + "/formData"), values)
         .then(() => {
           console.log("Data saved successfully!");
         })
@@ -84,7 +84,8 @@ const Form = () => {
     const user = auth.currentUser;
 
     if (user) {
-      const userRef = ref(database, "users/" + user.uid + "/formData");
+      const userRef = ref(database, "admins/" + user.uid + "/formData");
+
       get(userRef)
         .then((snapshot) => {
           if (snapshot.exists()) {
@@ -286,8 +287,8 @@ const Form = () => {
                             justifyContent: "center",
                             borderRadius: "8px",
 
-                            border: `2px solid ${colors.tealAccent[600]}`,
-                            boxShadow: `0 0 10px ${colors.tealAccent[600]}`,
+                            border: `1px solid ${colors.tealAccent[600]}`,
+                            boxShadow: `0 0 3px ${colors.tealAccent[600]}`,
                             background:
                               "linear-gradient(110deg,#000103 45%,#1e2631 55%,#000103)",
                             backgroundSize: "200% 100%",
@@ -295,7 +296,7 @@ const Form = () => {
                             color: "#9CA3AF",
                             fontWeight: "500",
                             textTransform: "none",
-                            animation: "shimmer 2s infinite",
+                            animation: "shimmer 15s infinite",
                             transition: "color 0.3s",
                             "&:hover": {
                               color: "#FFFFFF",
@@ -329,8 +330,8 @@ const Form = () => {
                         justifyContent: "center",
                         borderRadius: "8px",
 
-                        border: `2px solid ${colors.tealAccent[600]}`,
-                        boxShadow: `0 0 10px ${colors.tealAccent[600]}`,
+                        border: `1px solid ${colors.tealAccent[600]}`,
+                        boxShadow: `0 0 3px ${colors.tealAccent[600]}`,
                         background:
                           "linear-gradient(110deg,#000103 45%,#1e2631 55%,#000103)",
                         backgroundSize: "200% 100%",
@@ -338,7 +339,7 @@ const Form = () => {
                         color: "#9CA3AF",
                         fontWeight: "500",
                         textTransform: "none",
-                        animation: "shimmer 2s infinite",
+                        animation: "shimmer 15s infinite",
                         transition: "color 0.3s",
                         "&:hover": {
                           color: "#FFFFFF",
@@ -436,8 +437,8 @@ const Form = () => {
                             justifyContent: "center",
                             borderRadius: "8px",
 
-                            border: `2px solid ${colors.tealAccent[600]}`,
-                            boxShadow: `0 0 10px ${colors.tealAccent[600]}`,
+                            border: `1px solid ${colors.tealAccent[600]}`,
+                            boxShadow: `0 0 3px ${colors.tealAccent[600]}`,
                             background:
                               "linear-gradient(110deg,#000103 45%,#1e2631 55%,#000103)",
                             backgroundSize: "200% 100%",
@@ -445,7 +446,7 @@ const Form = () => {
                             color: "#9CA3AF",
                             fontWeight: "500",
                             textTransform: "none",
-                            animation: "shimmer 2s infinite",
+                            animation: "shimmer 15s infinite",
                             transition: "color 0.3s",
                             "&:hover": {
                               color: "#FFFFFF",
@@ -477,8 +478,8 @@ const Form = () => {
                         justifyContent: "center",
                         borderRadius: "8px",
 
-                        border: `2px solid ${colors.tealAccent[600]}`,
-                        boxShadow: `0 0 10px ${colors.tealAccent[600]}`,
+                        border: `1px solid ${colors.tealAccent[600]}`,
+                        boxShadow: `0 0 3px ${colors.tealAccent[600]}`,
                         background:
                           "linear-gradient(110deg,#000103 45%,#1e2631 55%,#000103)",
                         backgroundSize: "200% 100%",
@@ -486,7 +487,7 @@ const Form = () => {
                         color: "#9CA3AF",
                         fontWeight: "500",
                         textTransform: "none",
-                        animation: "shimmer 2s infinite",
+                        animation: "shimmer 15s infinite",
                         transition: "color 0.3s",
                         "&:hover": {
                           color: "#FFFFFF",
@@ -608,8 +609,8 @@ const Form = () => {
                             justifyContent: "center",
                             borderRadius: "8px",
 
-                            border: `2px solid ${colors.tealAccent[600]}`,
-                            boxShadow: `0 0 10px ${colors.tealAccent[600]}`,
+                            border: `1px solid ${colors.tealAccent[600]}`,
+                            boxShadow: `0 0 3px ${colors.tealAccent[600]}`,
                             background:
                               "linear-gradient(110deg,#000103 45%,#1e2631 55%,#000103)",
                             backgroundSize: "200% 100%",
@@ -617,7 +618,7 @@ const Form = () => {
                             color: "#9CA3AF",
                             fontWeight: "500",
                             textTransform: "none",
-                            animation: "shimmer 2s infinite",
+                            animation: "shimmer 15s infinite",
                             transition: "color 0.3s",
                             "&:hover": {
                               color: "#FFFFFF",
@@ -649,8 +650,8 @@ const Form = () => {
                         justifyContent: "center",
                         borderRadius: "8px",
 
-                        border: `2px solid ${colors.tealAccent[600]}`,
-                        boxShadow: `0 0 10px ${colors.tealAccent[600]}`,
+                        border: `1px solid ${colors.tealAccent[600]}`,
+                        boxShadow: `0 0 5px ${colors.tealAccent[600]}`,
                         background:
                           "linear-gradient(110deg,#000103 45%,#1e2631 55%,#000103)",
                         backgroundSize: "200% 100%",
@@ -658,7 +659,7 @@ const Form = () => {
                         color: "#9CA3AF",
                         fontWeight: "500",
                         textTransform: "none",
-                        animation: "shimmer 2s infinite",
+                        animation: "shimmer 15s infinite",
                         transition: "color 0.3s",
                         "&:hover": {
                           color: "#FFFFFF",
@@ -729,8 +730,8 @@ const Form = () => {
                             justifyContent: "center",
                             borderRadius: "8px",
 
-                            border: `2px solid ${colors.tealAccent[600]}`,
-                            boxShadow: `0 0 10px ${colors.tealAccent[600]}`,
+                            border: `1px solid ${colors.tealAccent[600]}`,
+                            boxShadow: `0 0 3px ${colors.tealAccent[600]}`,
                             background:
                               "linear-gradient(110deg,#000103 45%,#1e2631 55%,#000103)",
                             backgroundSize: "200% 100%",
@@ -738,7 +739,7 @@ const Form = () => {
                             color: "#9CA3AF",
                             fontWeight: "500",
                             textTransform: "none",
-                            animation: "shimmer 2s infinite",
+                            animation: "shimmer 15s infinite",
                             transition: "color 0.3s",
                             "&:hover": {
                               color: "#FFFFFF",
@@ -770,8 +771,8 @@ const Form = () => {
                         justifyContent: "center",
                         borderRadius: "8px",
 
-                        border: `2px solid ${colors.tealAccent[600]}`,
-                        boxShadow: `0 0 10px ${colors.tealAccent[600]}`,
+                        border: `1px solid ${colors.tealAccent[600]}`,
+                        boxShadow: `0 0 3px ${colors.tealAccent[600]}`,
                         background:
                           "linear-gradient(110deg,#000103 45%,#1e2631 55%,#000103)",
                         backgroundSize: "200% 100%",
@@ -779,7 +780,7 @@ const Form = () => {
                         color: "#9CA3AF",
                         fontWeight: "500",
                         textTransform: "none",
-                        animation: "shimmer 2s infinite",
+                        animation: "shimmer 15s infinite",
                         transition: "color 0.3s",
                         "&:hover": {
                           color: "#FFFFFF",
@@ -812,8 +813,8 @@ const Form = () => {
                   justifyContent: "center",
                   borderRadius: "8px",
 
-                  border: `2px solid ${colors.tealAccent[600]}`,
-                  boxShadow: `0 0 10px ${colors.tealAccent[600]}`,
+                  border: `1px solid ${colors.tealAccent[600]}`,
+                  boxShadow: `0 0 3px ${colors.tealAccent[600]}`,
                   background:
                     "linear-gradient(110deg,#000103 45%,#1e2631 55%,#000103)",
                   backgroundSize: "200% 100%",
@@ -821,7 +822,7 @@ const Form = () => {
                   color: "#9CA3AF",
                   fontWeight: "500",
                   textTransform: "none",
-                  animation: "shimmer 2s infinite",
+                  animation: "shimmer 15s infinite",
                   transition: "color 0.3s",
                   "&:hover": {
                     color: "#FFFFFF",

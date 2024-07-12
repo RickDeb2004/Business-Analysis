@@ -23,7 +23,9 @@ const Geography = () => {
         const db = database;
         const dataRef = ref(
           db,
-          `users/${auth.currentUser.uid}/formData/salesPerUnit`
+
+          `admins/${auth.currentUser.uid}/formData/salesPerUnit`
+
         );
         const snapshot = await get(dataRef);
 

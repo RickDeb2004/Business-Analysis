@@ -10,6 +10,7 @@ import {
   IconButton,
   InputLabel,
   TextField,
+  Typography,
 } from "@mui/material";
 import { DataGrid, GridToolbar } from "@mui/x-data-grid";
 import { useTheme } from "@mui/material";
@@ -23,13 +24,16 @@ import {
   onChildChanged,
   onChildRemoved,
   off,
+  push,
 } from "firebase/database";
 import { auth, database } from "../../firebase";
 import Header from "../../components/Header";
 import DeleteIcon from "@mui/icons-material/Delete";
+import SendIcon from "@mui/icons-material/Send";
 import ChatIcon from "@mui/icons-material/Chat";
+
 import { useNavigate } from "react-router-dom";
-import { createUserWithEmailAndPassword } from "firebase/auth";
+import { createUserWithEmailAndPassword, getAuth } from "firebase/auth";
 
 const AdminList = () => {
   const theme = useTheme();
@@ -44,78 +48,72 @@ const AdminList = () => {
     role: "admin",
   });
   const [openChatDialog, setOpenChatDialog] = useState(false);
-const [chatMessage, setChatMessage] = useState("");
-const [selectedAdminId, setSelectedAdminId] = useState(null);
-const [unreadMessagesCount, setUnreadMessagesCount] = useState(0);
-const [messages, setMessages] = useState([]);
+
+  const [chatMessage, setChatMessage] = useState("");
+  const [selectedAdminId, setSelectedAdminId] = useState(null);
+  const [unreadMessagesCount, setUnreadMessagesCount] = useState(0);
+  const [messages, setMessages] = useState([]);
 
   const [error, setError] = useState("");
   const navigate = useNavigate();
 
   useEffect(() => {
     const fetchAdmins = async () => {
-      const adminsRef = ref(database, "adminActivity");
+      const adminsRef = ref(database, "admins");
       const snapshot = await get(adminsRef);
       if (snapshot.exists()) {
         const users = snapshot.val();
 
-        const adminList = Object.keys(users).map((key) => ({
+        const adminsList = Object.keys(users).map((key) => ({
           id: key,
           ...users[key],
         }));
 
         // Fetch feedbacks and merge with admin data
-        const feedbackRef = ref(database, "feedback");
-        const feedbackSnapshot = await get(feedbackRef);
-        const feedbackData = feedbackSnapshot.exists()
-          ? feedbackSnapshot.val()
-          : {};
+        const updatedAdminsList = await Promise.all(
+          adminsList.map(async (admin) => {
+            const feedbackRef = ref(database, `admins/${admin.id}/feedback`);
+            const feedbackSnapshot = await get(feedbackRef);
+            let latestFeedback = "No feedback";
+            if (feedbackSnapshot.exists()) {
+              const feedbacks = Object.values(feedbackSnapshot.val());
+              latestFeedback =
+                feedbacks.length > 0 ? feedbacks[feedbacks.length - 1] : "No feedback";
+            }
+            return { ...admin, feedback: latestFeedback };
+          })
+        );
 
-        // console.log(feedbackData)
-        const adminListWithFeedback = adminList.map((admin) => {
-          // console.log(admin.uid)
-          const adminFeedbacks = feedbackData[admin.uid]
-            ? Object.values(feedbackData[admin.uid])
-            : [];
-          // console.log(adminFeedbacks)
-          // Get the most recent feedback
-          const length = adminFeedbacks.length;
-          const latestFeedback = length > 0 ? adminFeedbacks[length - 1] : null;
+        setAdmins(updatedAdminsList);
+      }
 
-          return {
-            ...admin,
-            feedback: latestFeedback ? latestFeedback.feedback : "No feedback",
-          };
-        });
-
-        setAdmins(adminListWithFeedback);
-
-        // Get the current user's ID and role
-        const currentUserId = auth.currentUser.uid;
-        const usersRef = ref(database, "users");
-        const usersSnapshot = await get(usersRef);
-        if (usersSnapshot.exists()) {
-          const usersData = usersSnapshot.val();
-          if (usersData[currentUserId]) {
-            setCurrentUserRole(usersData[currentUserId].role);
-          }
-        }
+      // Get the current user's ID and role
+      const auth = getAuth();
+      const currentUserId = auth.currentUser.uid;
+      const roleMailRef = ref(database, `rolemail/${currentUserId}`);
+      const roleMailSnapshot = await get(roleMailRef);
+      if (roleMailSnapshot.exists()) {
+        const currentUserData = roleMailSnapshot.val();
+        setCurrentUserRole(currentUserData.role);
       }
     };
+
     fetchAdmins();
   }, []);
 
   useEffect(() => {
-    const adminActivityRef = ref(database, "adminActivity");
+    const adminsRef = ref(database, "admins");
 
     const handleChildAddedOrChanged = async (snapshot) => {
       const data = snapshot.val();
-      const feedbackRef = ref(database, `feedback/${data.uid}`);
+      const feedbackRef = ref(database, `admins/${snapshot.key}/feedback`);
       const feedbackSnapshot = await get(feedbackRef);
-      const feedbacks = feedbackSnapshot.exists()
-        ? Object.values(feedbackSnapshot.val())
-        : [];
-      const feedbackText = feedbacks.map((fb) => fb.feedback).join(", ");
+      let latestFeedback = "No feedback";
+      if (feedbackSnapshot.exists()) {
+        const feedbacks = Object.values(feedbackSnapshot.val());
+        latestFeedback =
+          feedbacks.length > 0 ? feedbacks[feedbacks.length - 1] : "No feedback";
+      }
 
       setAdmins((prevAdmins) => {
         const existingIndex = prevAdmins.findIndex(
@@ -126,13 +124,13 @@ const [messages, setMessages] = useState([]);
           updatedAdmins[existingIndex] = {
             id: snapshot.key,
             ...data,
-            feedback: feedbackText,
+            feedback: latestFeedback,
           };
           return updatedAdmins;
         } else {
           return [
             ...prevAdmins,
-            { id: snapshot.key, ...data, feedback: feedbackText },
+            { id: snapshot.key, ...data, feedback: latestFeedback },
           ];
         }
       });
@@ -144,29 +142,22 @@ const [messages, setMessages] = useState([]);
       );
     };
 
-    const childAddedListener = onChildAdded(
-      adminActivityRef,
-      handleChildAddedOrChanged
-    );
-    const childChangedListener = onChildChanged(
-      adminActivityRef,
-      handleChildAddedOrChanged
-    );
-    const childRemovedListener = onChildRemoved(
-      adminActivityRef,
-      handleChildRemoved
-    );
+    onChildAdded(adminsRef, handleChildAddedOrChanged);
+    onChildChanged(adminsRef, handleChildAddedOrChanged);
+    onChildRemoved(adminsRef, handleChildRemoved);
 
+    // Clean up listeners
     return () => {
-      off(adminActivityRef, "child_added", childAddedListener);
-      off(adminActivityRef, "child_changed", childChangedListener);
-      off(adminActivityRef, "child_removed", childRemovedListener);
+      off(adminsRef, "child_added", handleChildAddedOrChanged);
+      off(adminsRef, "child_changed", handleChildAddedOrChanged);
+      off(adminsRef, "child_removed", handleChildRemoved);
     };
   }, []);
 
   const handleDelete = async (id) => {
     try {
-      await remove(ref(database, `adminActivity/${id}`));
+      await remove(ref(database, `admins/${id}`));
+
       setAdmins(admins.filter((admin) => admin.id !== id));
     } catch (error) {
       console.error("Error deleting admin:", error);
@@ -175,8 +166,8 @@ const [messages, setMessages] = useState([]);
 
   const handleChat = (id) => {
     setSelectedAdminId(id);
-  setOpenChatDialog(true);
-
+    fetchMessages(id);
+    setOpenChatDialog(true);
   };
 
   const handleDialogOpen = () => {
@@ -191,13 +182,17 @@ const [messages, setMessages] = useState([]);
 
   const handleFormSubmit = async () => {
     try {
-      const usersRef = ref(database, "users");
-      const usersSnapshot = await get(usersRef);
-      const usersData = usersSnapshot.exists() ? usersSnapshot.val() : {};
+      const roleMailRef = ref(database, "rolemail");
+      const roleMailSnapshot = await get(roleMailRef);
+      const roleMailData = roleMailSnapshot.exists()
+        ? roleMailSnapshot.val()
+        : {};
 
       // Check if the email is already in use
       if (
-        Object.values(usersData).some((user) => user.email === formData.email)
+        Object.values(roleMailData).some(
+          (entry) => entry.email === formData.email
+        )
       ) {
         setError("Email already in use");
         return;
@@ -211,20 +206,18 @@ const [messages, setMessages] = useState([]);
       );
       const user = userCredential.user;
 
-      // Add the new admin data to the users ref
-      await set(ref(database, `users/${user.uid}`), {
+      // Add the new admin role and email to the rolemail ref
+      await set(ref(database, `rolemail/${user.uid}`), {
+        email: formData.email,
+        role: formData.role,
+      });
+
+      // Add the new admin data to the admins ref
+      await set(ref(database, `admins/${user.uid}`), {
         name: formData.name,
         email: formData.email,
         password: formData.password,
         role: formData.role,
-      });
-
-      // Add the new admin data to the adminActivity ref
-      await set(ref(database, `adminActivity/${user.uid}`), {
-        name: formData.name,
-        email: formData.email,
-        signInTime: "new",
-        feedback: "---",
       });
 
       // Close the dialog and reset the form
@@ -234,30 +227,39 @@ const [messages, setMessages] = useState([]);
       setError("Failed to add admin. Please try again.");
     }
   };
+  const fetchMessages = async (adminId) => {
+    const messagesRef = ref(database, `chats/${adminId}`);
+    const snapshot = await get(messagesRef);
+    if (snapshot.exists()) {
+      const messagesData = snapshot.val();
+      const allMessages = Object.entries(messagesData).map(
+        ([msgId, message]) => ({
+          ...message,
+          msgId,
+        })
+      );
+      setMessages(allMessages);
+    }
+  };
 
   const columns = [
-    { field: "id", headerName: "ID", flex: 0.5 },
-    { field: "name", headerName: "Name", flex: 0.75 },
+    { field: "id", headerName: "ID", flex: 1 },
+    { field: "name", headerName: "Name", flex: 0.8 },
     { field: "email", headerName: "Email", flex: 1 },
-    { field: "signInTime", headerName: "Login Time", flex: 1 },
-    { field: "feedback", headerName: "Feedback", flex: 2 },
+    { field: "feedback", headerName: "Feedback", flex: 1.6 },
     {
       field: "actions",
       headerName: "Actions",
       flex: 1,
       renderCell: (params) => (
         <>
-          {currentUserRole === "superadmin" && (
-            <>
-              <IconButton
-                color="secondary"
-                sx={{ marginRight: 1, color: colors.redAccent[600] }}
-                onClick={() => handleDelete(params.id)}
-              >
-                <DeleteIcon />
-              </IconButton>
-            </>
-          )}
+          <IconButton
+            color="secondary"
+            sx={{ marginRight: 1, color: colors.redAccent[600] }}
+            onClick={() => handleDelete(params.id)}
+          >
+            <DeleteIcon />
+          </IconButton>
         </>
       ),
     },
@@ -280,21 +282,17 @@ const [messages, setMessages] = useState([]);
       ),
     },
   ];
+
   const handleSendMessage = async () => {
     if (chatMessage.trim() === "") return;
-  
-    const newMessageRef = ref(
-      database,
-      `messages/${selectedAdminId}/${Date.now()}`
-    );
-    await set(newMessageRef, {
+    const messageRef = ref(database, `chats/${selectedAdminId}`);
+    await push(messageRef, {
       message: chatMessage,
       timestamp: Date.now(),
       sender: "superadmin",
     });
-  
     setChatMessage("");
-    setOpenChatDialog(false);
+    fetchMessages(selectedAdminId);
   };
   return (
     <Box m="20px">
@@ -465,39 +463,78 @@ const [messages, setMessages] = useState([]);
           </Button>
         </DialogActions>
       </Dialog>
+
       <Dialog open={openChatDialog} onClose={() => setOpenChatDialog(false)}>
-  <DialogTitle
-    sx={{ backgroundColor: "#000000", color: colors.yellowAccent[600] }}
-  >
-    Send Message
-  </DialogTitle>
-  <DialogContent sx={{ backgroundColor: "#000000" }}>
-    <TextField
-      margin="dense"
-      label="Message"
-      fullWidth
-      variant="outlined"
-      value={chatMessage}
-      onChange={(e) => setChatMessage(e.target.value)}
-      sx={{
-        marginBottom: "10px",
-        boxShadow:
-          "0px 2px 3px -1px rgba(0,0,0,0.1), 0px 1px 0px 0px rgba(25,28,33,0.02), 0px 0px 0px 1px rgba(25,28,33,0.08)",
-        "&:hover": {
-          boxShadow: "0px 0px 8px 2px rgba(33,150,243,0.5)",
-        },
-      }}
-    />
-  </DialogContent>
-  <DialogActions sx={{ backgroundColor: "#000000" }}>
-    <Button onClick={() => setOpenChatDialog(false)} color="secondary">
-      Cancel
-    </Button>
-    <Button onClick={handleSendMessage} color="info">
-      Send
-    </Button>
-  </DialogActions>
-</Dialog>
+        <DialogTitle
+          sx={{ backgroundColor: "#000000", color: colors.yellowAccent[600] }}
+        >
+          Chat with Admin
+        </DialogTitle>
+        <DialogContent dividers sx={{ backgroundColor: "#000000" }}>
+          <Box
+            sx={{
+              display: "flex",
+              flexDirection: "column",
+              gap: "10px",
+              overflowY: "auto",
+              maxHeight: "400px",
+            }}
+          >
+            {messages.map((msg) => (
+              <Box
+                key={msg.msgId}
+                sx={{
+                  alignSelf:
+                    msg.sender === "superadmin" ? "flex-end" : "flex-start",
+                }}
+              >
+                <Typography
+                  variant="body2"
+                  sx={{
+                    background:
+                      msg.sender === "superadmin"
+                        ? colors.tealAccent[700]
+                        : colors.primary[400],
+                    padding: "8px 12px",
+                    borderRadius: "4px",
+                    color: "#ffffff",
+                  }}
+                >
+                  {msg.message}
+                </Typography>
+              </Box>
+            ))}
+          </Box>
+        </DialogContent>
+        <DialogActions
+          sx={{
+            backgroundColor: "#000000",
+            display: "flex",
+            alignItems: "center",
+            gap: "10px",
+          }}
+        >
+          <TextField
+            value={chatMessage}
+            onChange={(e) => setChatMessage(e.target.value)}
+            placeholder="Type a message"
+            fullWidth
+            variant="outlined"
+            size="small"
+            sx={{
+              marginBottom: "10px",
+              boxShadow:
+                "0px 2px 3px -1px rgba(0,0,0,0.1), 0px 1px 0px 0px rgba(25,28,33,0.02), 0px 0px 0px 1px rgba(25,28,33,0.08)",
+              "&:hover": {
+                boxShadow: "0px 0px 8px 2px rgba(33,150,243,0.5)",
+              },
+            }}
+          />
+          <IconButton onClick={handleSendMessage} color="info" variant="contained">
+            <SendIcon />
+          </IconButton>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };

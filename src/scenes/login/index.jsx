@@ -11,12 +11,13 @@ const Login = ({ handleLoginSuccess }) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [userUID, setUserUID] = useState("");
 
 
 
   const handleLogin = async () => {
     try {
-      
+
       const userCredential = await signInWithEmailAndPassword(
         auth,
         email,
@@ -24,84 +25,141 @@ const Login = ({ handleLoginSuccess }) => {
       );
       const user = userCredential.user;
 
-      // Check user role from the database
-      const userRoleRef = ref(database, "users/" + user.uid + "/role");
-      const snapshot = await get(userRoleRef);
 
-      if (snapshot.exists()) {
-        const role = snapshot.val();
+      // Fetch the role from the rolemail node
+      const roleMailRef = ref(database, "rolemail");
 
-        // Get user name
-        const userNameRef = ref(database, "users/" + user.uid + "/name");
-        const userNameSnapshot = await get(userNameRef);
-        const userName = userNameSnapshot.exists()
-          ? userNameSnapshot.val()
-          : "Unknown User";
+      const roleMailSnapshot = await get(roleMailRef);
+      // console.log("roleMailRef", roleMailRef);
+      // console.log("roleMailSnapshot", roleMailSnapshot);
 
-        // Record the sign-in activity
-        // Record the sign-in activity
-        if (role === "user" || role === "admin") {
-          const activityRef = ref(database, `${role}Activity`);
+      if (roleMailSnapshot.exists()) {
+        const roleMailData = roleMailSnapshot.val();
+        const userEntry = Object.entries(roleMailData).find(
+          ([key, value]) => value.email === email
+        );
 
-          // Fetch existing activities
-          const existingActivitiesSnapshot = await get(activityRef);
-          let existingActivityKey = null;
+        if (userEntry) {
+          const [userId, userInfo] = userEntry;
+          const { role } = userInfo;
+          console.log("userentry", userEntry, userInfo);
 
-          if (existingActivitiesSnapshot.exists()) {
-            const activities = existingActivitiesSnapshot.val();
-            for (const [key, activity] of Object.entries(activities)) {
-              if (activity.email === user.email) {
-                existingActivityKey = key;
-                break;
+          if (role === "superadmin") {
+            // Fetch the user details from the users database for superadmin
+            const userRef = ref(database, "users/" + userId);
+            console.log("userref", userRef);
+            const userSnapshot = await get(userRef);
+            console.log("usersnapshot", userSnapshot);
+            if (userSnapshot.exists()) {
+              const userData = userSnapshot.val();
+              console.log("userdata", userData);
+              if (userData.password === password) {
+                // Superadmin authenticated successfully
+                handleLoginSuccess(role);
+                // Store user information in localStorage
+                localStorage.setItem(
+                  "user",
+                  JSON.stringify({ uid: userId, role })
+                );
+                return;
+              } else {
+                setError("Invalid superadmin credentials");
+                return;
               }
+            } else {
+              setError("Superadmin not found");
+              return;
             }
-          }
-
-          const now = new Date();
-          const hours = now.getHours().toString().padStart(2, "0");
-          const minutes = now.getMinutes().toString().padStart(2, "0");
-          const time = `${hours}:${minutes}`;
-          const day = now.getDate().toString().padStart(2, "0");
-          const month = (now.getMonth() + 1).toString().padStart(2, "0");
-          const year = now.getFullYear().toString().slice(-2);
-          const date = `${day}/${month}/${year}`;
-          const formattedTime = `${time} - ${date}`;
-
-          if (existingActivityKey) {
-            // Update existing activity
-            const existingActivityRef = ref(
+          } else if (role === "admin") {
+            // For admin, check the password in the admins node
+            const adminRef = ref(database, "admins/" + userId);
+            const adminSnapshot = await get(adminRef);
+            if (adminSnapshot.exists()) {
+              const adminData = adminSnapshot.val();
+              if (adminData.password === password) {
+                // Admin authenticated successfully
+                handleLoginSuccess(role);
+                // Store user information in localStorage
+                localStorage.setItem(
+                  "user",
+                  JSON.stringify({ uid: userId, role })
+                );
+                return;
+              } else {
+                setError("Invalid admin credentials");
+                return;
+              }
+            } else {
+              setError("Admin not found");
+              return;
+            }
+          } else if (role === "user") {
+            // For admin, check the password in the admins node
+            const useridSplit = userId.split("_")[0];
+            // console.log("useridSplit", useridSplit);
+            const useRef = ref(
               database,
-              `${role}Activity/${existingActivityKey}`
+              "userList/" + useridSplit + "/" + userId
             );
-            await update(existingActivityRef, {
-              signInTime: formattedTime,
-            });
+
+            const useSnapshot = await get(useRef);
+            console.log("useSnapshot", useSnapshot);
+            if (useSnapshot.exists()) {
+              const useData = useSnapshot.val();
+              if (useData.blocked) {
+                await auth.signOut();
+                setError(
+                  "Your account has been blocked. Please contact support."
+                );
+                return;
+              }
+              if (useData.password === password) {
+                // Admin authenticated successfully
+                handleLoginSuccess(role);
+                // Store user information in localStorage
+                localStorage.setItem(
+                  "user",
+                  JSON.stringify({ uid: userId, role })
+                );
+                // update the signInTime
+                const hour = new Date().getHours();
+                const minute = new Date().getMinutes();
+                const signInTime = `${hour}:${minute}`;
+                const DateMonth = new Date().getMonth();
+                const DateDay = new Date().getDate();
+                const loginTime = `${signInTime} - ${DateMonth}/${DateDay}`;
+                console.log("loginTime", loginTime);
+                const signInTimeRef = ref(
+                  database,
+                  "userList/" + useridSplit + "/" + userId + "/signInTime"
+                );
+                await set(signInTimeRef, loginTime);
+                return;
+              } else {
+                setError("Invalid user credentials");
+                return;
+              }
+            } else {
+              setError("user not found");
+              return;
+            }
           } else {
-            // Push new activity
-            const newActivityRef = push(activityRef);
-            await set(newActivityRef, {
-              uid: user.uid,
-              name: userName,
-              email: user.email,
-              role: role,
-              signInTime: formattedTime,
-            });
+            setError("Not an admin or superadmin or user account");
+            return;
           }
+        } else {
+          setError("Email not found");
+          return;
         }
-
-        // Store user information in localStorage
-        localStorage.setItem("user", JSON.stringify({ uid: user.uid, role }));
-
-        handleLoginSuccess(role);
-        // navigate("/dashboard");
       } else {
-        setError("Invalid credentials");
+        setError("No role data found");
+        return;
+
       }
     } catch (error) {
       setError(error.message);
     }
   };
-
   const lampEffectStyle = {
     position: "relative",
     background: "black",
