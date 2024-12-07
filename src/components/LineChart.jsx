@@ -17,7 +17,10 @@ const LineChart = ({ isCustomLineColors = false, isDashboard = false }) => {
         return;
       }
       const db = getDatabase();
-      const dataRef = ref(db, `users/${auth.currentUser.uid}/formData/salesPerMonth`);
+      const dataRef = ref(
+        db,
+        `admins/${auth.currentUser.uid}/formData/salesPerMonth`
+      );
       const snapshot = await get(dataRef);
 
       if (snapshot.exists()) {
@@ -35,27 +38,32 @@ const LineChart = ({ isCustomLineColors = false, isDashboard = false }) => {
   const formatData = (firebaseData) => {
     const dataByCountry = {};
 
-    Object.values(firebaseData).forEach(item => {
+    Object.values(firebaseData).forEach((item) => {
       if (!dataByCountry[item.country]) {
         dataByCountry[item.country] = [];
       }
       dataByCountry[item.country].push({
         x: item.month,
-        y: item.amount
+        y: item.amount,
       });
     });
 
     const result = Object.keys(dataByCountry).map((country, index) => ({
       id: country,
-      color: theme.palette.type === 'dark' ? colors[index % colors.length] : `hsl(${(index * 360) / Object.keys(dataByCountry).length}, 70%, 50%)`,
-      data: dataByCountry[country]
+      color:
+        theme.palette.type === "dark"
+          ? colors[index % colors.length]
+          : `hsl(${
+              (index * 360) / Object.keys(dataByCountry).length
+            }, 70%, 50%)`,
+      data: dataByCountry[country],
     }));
 
     return result;
   };
 
   if (data.length === 0) {
-    return <div>Loading...</div>; 
+    return <div>Loading...</div>;
   }
 
   return (

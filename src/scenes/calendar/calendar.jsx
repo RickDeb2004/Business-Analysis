@@ -14,7 +14,9 @@ import {
 } from "@mui/material";
 import Header from "../../components/Header";
 import { tokens } from "../../theme";
-import { database } from "../../firebase";
+
+import { database, auth } from "../../firebase";
+
 import { ref, set, get, remove } from "firebase/database";
 import EventDialog from "../../components/EventDialouge"; // Adjust the import path if necessary
 import GradientBox from "../../components/GradientBox";
@@ -26,29 +28,40 @@ const Calendar = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState(null);
 
+  const user = auth.currentUser;
+
   // Fetch events from Firebase when the component mounts
   useEffect(() => {
-    const fetchEvents = async () => {
-      const eventsRef = ref(database, "events");
-      const snapshot = await get(eventsRef);
-      if (snapshot.exists()) {
-        const events = Object.values(snapshot.val());
-        setCurrentEvents(events);
-      }
-    };
-    fetchEvents();
-  }, []);
+    if (user) {
+      const fetchEvents = async () => {
+        const eventsRef = ref(database, `events/${user.uid}`);
+        const snapshot = await get(eventsRef);
+        if (snapshot.exists()) {
+          const events = Object.values(snapshot.val());
+          setCurrentEvents(events);
+        }
+      };
+      fetchEvents();
+    }
+  }, [user]);
 
   // Add event to Firebase
   const addEventToFirebase = async (event) => {
-    const eventRef = ref(database, `events/${event.id}`);
-    await set(eventRef, event);
+    if (user) {
+      const eventRef = ref(database, `events/${user.uid}/${event.id}`);
+      await set(eventRef, event);
+    }
+
   };
 
   // Remove event from Firebase
   const removeEventFromFirebase = async (eventId) => {
-    const eventRef = ref(database, `events/${eventId}`);
-    await remove(eventRef);
+
+    if (user) {
+      const eventRef = ref(database, `events/${user.uid}/${eventId}`);
+      await remove(eventRef);
+    }
+
   };
 
   // Handle date click
@@ -97,12 +110,14 @@ const Calendar = () => {
         {/* CALENDAR SIDEBAR */}
         <Box
           flex="1 1 20%"
-          backgroundColor={colors.primary[400]}
+          backgroundColor="#0A0A0A"
           p="15px"
           borderRadius="4px"
           sx={{
-            border: `2px solid ${colors.tealAccent[600]}`,
-            boxShadow: `0 0 10px ${colors.tealAccent[600]}`,
+
+            border: `1px solid ${colors.purpleAccent[600]}`,
+            boxShadow: `0 0 3px ${colors.purpleAccent[600]}`,
+
           }}
         >
           <Typography variant="h5">Events</Typography>
@@ -111,10 +126,12 @@ const Calendar = () => {
               <ListItem
                 key={event.id}
                 sx={{
-                  backgroundColor: colors.greenAccent[500],
+                  backgroundColor: `linear-gradient(135deg, ${colors.tealAccent[600]} 30%, ${colors.greenAccent[600]} 100%)`,
                   margin: "10px 0",
-                  border: `8px solid ${colors.grey[600]}`,
-                  boxShadow: `0 0 10px ${colors.grey[600]}`,
+
+                  border: `2px solid ${colors.tealAccent[600]}`,
+                  boxShadow: `0 0 10px ${colors.tealAccent[600]}`,
+
                 }}
               >
                 <ListItemText

@@ -35,7 +35,7 @@ const Dashboard = () => {
       const db = getDatabase();
       const dataRef = ref(
         db,
-        `users/${auth.currentUser.uid}/formData/salesPerMonth`
+        `admins/${auth.currentUser.uid}/formData/salesPerMonth`
       );
       const snapshot = await get(dataRef);
 
@@ -61,7 +61,8 @@ const Dashboard = () => {
         const db = database;
         const dataRef = ref(
           db,
-          `users/${auth.currentUser.uid}/formData/salesPerUnit`
+
+          `admins/${auth.currentUser.uid}/formData/salesPerUnit`
         );
         const snapshot = await get(dataRef);
 
@@ -80,7 +81,9 @@ const Dashboard = () => {
         return;
       }
       const db = getDatabase();
-      const dataRef = ref(db, `userActivity`);
+
+      const dataRef = ref(db, `userList/${auth.currentUser.uid}`);
+
       const snapshot = await get(dataRef);
 
       if (snapshot.exists()) {
@@ -96,11 +99,12 @@ const Dashboard = () => {
         const db = getDatabase();
         const salesPerUnitRef = ref(
           db,
-          `users/${auth.currentUser.uid}/formData/salesPerUnit`
+
+          `admins/${auth.currentUser.uid}/formData/salesPerUnit`
         );
         console.log(
           "Fetching data from path:",
-          `users/${auth.currentUser.uid}/formData/salesPerUnit`
+          `admins/${auth.currentUser.uid}/formData/salesPerUnit`
         );
 
         const snapshot = await get(salesPerUnitRef);
@@ -254,7 +258,7 @@ const Dashboard = () => {
           justifyContent="center"
           sx={{
             border: `2px solid ${colors.tealAccent[600]}`,
-            boxShadow: `0 0 10px ${colors.tealAccent[600]}`,
+            boxShadow: `0 0 5px ${colors.tealAccent[600]}`,
             "@media (prefers-color-scheme: dark)": {
               bgcolor: "#18181b", // Equivalent to dark:bg-zinc-900
             },
@@ -280,7 +284,7 @@ const Dashboard = () => {
           justifyContent="center"
           sx={{
             border: `2px solid ${colors.purpleAccent[600]}`,
-            boxShadow: `0 0 10px ${colors.purpleAccent[600]}`,
+            boxShadow: `0 0 5px ${colors.purpleAccent[600]}`,
             "@media (prefers-color-scheme: dark)": {
               bgcolor: "#18181b", // Equivalent to dark:bg-zinc-900
             },
@@ -306,7 +310,7 @@ const Dashboard = () => {
           justifyContent="center"
           sx={{
             border: `2px solid ${colors.tealAccent[600]}`,
-            boxShadow: `0 0 10px ${colors.tealAccent[600]}`,
+            boxShadow: `0 0 5px ${colors.tealAccent[600]}`,
             "@media (prefers-color-scheme: dark)": {
               bgcolor: "#18181b", // Equivalent to dark:bg-zinc-900
             },
@@ -332,7 +336,7 @@ const Dashboard = () => {
           id="line-chart"
           sx={{
             border: `2px solid ${colors.tealAccent[600]}`,
-            boxShadow: `0 0 10px ${colors.tealAccent[600]}`,
+            boxShadow: `0 0 5px ${colors.tealAccent[600]}`,
             "@media (prefers-color-scheme: dark)": {
               bgcolor: "#18181b", // Equivalent to dark:bg-zinc-900
             },
@@ -380,7 +384,7 @@ const Dashboard = () => {
           overflow="auto"
           sx={{
             border: `2px solid ${colors.tealAccent[600]}`,
-            boxShadow: `0 0 10px ${colors.tealAccent[600]}`,
+            boxShadow: `0 0 5px ${colors.tealAccent[600]}`,
             "@media (prefers-color-scheme: dark)": {
               bgcolor: "#18181b", // Equivalent to dark:bg-zinc-900
             },
@@ -408,7 +412,7 @@ const Dashboard = () => {
               p="15px"
               sx={{
                 border: `2px solid ${colors.grey[600]}`,
-                boxShadow: `0 0 10px ${colors.grey[600]}`,
+                boxShadow: `0 0 5px ${colors.grey[600]}`,
               }}
             >
               <Box>
@@ -417,10 +421,10 @@ const Dashboard = () => {
                   variant="h5"
                   fontWeight="600"
                 >
-                  {transaction.txId}
+                  {transaction.user}
                 </Typography>
                 <Typography color={colors.grey[100]}>
-                  {transaction.user}
+                  {transaction.txId}
                 </Typography>
               </Box>
               <Box color={colors.grey[100]}>{transaction.date}</Box>
@@ -443,7 +447,7 @@ const Dashboard = () => {
           p="30px"
           sx={{
             border: `2px solid ${colors.tealAccent[600]}`,
-            boxShadow: `0 0 10px ${colors.tealAccent[600]}`,
+            boxShadow: `0 0 5px ${colors.tealAccent[600]}`,
             "@media (prefers-color-scheme: dark)": {
               bgcolor: "#18181b", // Equivalent to dark:bg-zinc-900
             },
@@ -476,7 +480,7 @@ const Dashboard = () => {
           id="bar-chart"
           sx={{
             border: `2px solid ${colors.tealAccent[600]}`,
-            boxShadow: `0 0 10px ${colors.tealAccent[600]}`,
+            boxShadow: `0 0 5px ${colors.tealAccent[600]}`,
             "@media (prefers-color-scheme: dark)": {
               bgcolor: "#18181b", // Equivalent to dark:bg-zinc-900
             },
@@ -501,7 +505,7 @@ const Dashboard = () => {
           id="geo-chart"
           sx={{
             border: `2px solid ${colors.tealAccent[600]}`,
-            boxShadow: `0 0 10px ${colors.tealAccent[600]}`,
+            boxShadow: `0 0 5px ${colors.tealAccent[600]}`,
             "@media (prefers-color-scheme: dark)": {
               bgcolor: "#18181b", // Equivalent to dark:bg-zinc-900
             },

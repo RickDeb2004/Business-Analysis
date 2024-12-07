@@ -6,57 +6,50 @@ import {
   Avatar,
   Card,
   useTheme,
+  IconButton,
 } from "@mui/material";
 import { getAuth } from "firebase/auth";
-import { get, ref, set, onValue } from "firebase/database";
+
+import { get, ref, update, onValue } from "firebase/database";
+
 import { useEffect, useState } from "react";
 import { database } from "../../firebase";
 import { tokens } from "../../theme";
 import Header from "../../components/Header";
+import DeleteIcon from "@mui/icons-material/Delete";
 
-// Import the TypewriterEffectSmooth component
-import TypewriterEffectSmooth from "../../components/TypeWriterEffect"; // Update with your correct path
+import TypewriterEffectSmooth from "../../components/TypeWriterEffect";
 
 const Feedback = () => {
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
-  const [role, setRole] = useState(null);
+
   const [feedback, setFeedback] = useState("");
   const [userFeedbacks, setUserFeedbacks] = useState([]);
+  const [userInfo, setUserInfo] = useState({});
 
   useEffect(() => {
-    const fetchUserRole = async () => {
-      const auth = getAuth();
-      const user = auth.currentUser;
-      if (user) {
-        const userRef = ref(database, `users/${user.uid}`);
-        const snapshot = await get(userRef);
-        if (snapshot.exists()) {
-          const userData = snapshot.val();
-          setRole(userData.role);
-        }
-      }
-    };
-
     const fetchUserFeedbacks = () => {
       const auth = getAuth();
       const user = auth.currentUser;
       if (user) {
-        const feedbackRef = ref(database, `feedback/${user.uid}`);
+        const feedbackRef = ref(database, `admins/${user.uid}`);
         onValue(feedbackRef, (snapshot) => {
           const data = snapshot.val();
           if (data) {
-            const feedbackList = Object.keys(data).map((key) => ({
-              id: key,
-              ...data[key],
-            }));
-            setUserFeedbacks(feedbackList.reverse());
+            const feedbacks = data.feedback || [];
+            const latestFeedbacks = feedbacks.slice(-5).reverse();
+            setUserFeedbacks(latestFeedbacks);
+            setUserInfo({
+              name: data.name || "Anonymous",
+              email: data.email,
+              role: data.role,
+            });
           }
         });
       }
     };
 
-    fetchUserRole();
     fetchUserFeedbacks();
   }, []);
 
@@ -64,26 +57,35 @@ const Feedback = () => {
     const auth = getAuth();
     const user = auth.currentUser;
     if (user) {
-      const userRef = ref(database, `users/${user.uid}`);
-      const snapshot = await get(userRef);
-      let userName = "Anonymous";
+      const feedbackRef = ref(database, `admins/${user.uid}`);
+      const snapshot = await get(feedbackRef);
       if (snapshot.exists()) {
-        const userData = snapshot.val();
-        userName = userData.name || "Anonymous";
+        const adminData = snapshot.val();
+        const newFeedback = [...(adminData.feedback || []), feedback];
+        await update(feedbackRef, {
+          feedback: newFeedback,
+        });
+        setFeedback("");
       }
+    }
+  };
 
-      const feedbackRef = ref(database, `feedback/${user.uid}`);
-      const newFeedbackRef = ref(
-        database,
-        `feedback/${user.uid}/${Date.now()}`
-      );
-      await set(newFeedbackRef, {
-        name: userName,
-        email: user.email,
-        role: role,
-        feedback: feedback,
-      });
-      setFeedback("");
+  const handleDelete = async (index) => {
+    const auth = getAuth();
+    const user = auth.currentUser;
+    if (user) {
+      const feedbackRef = ref(database, `admins/${user.uid}`);
+      const snapshot = await get(feedbackRef);
+      if (snapshot.exists()) {
+        const adminData = snapshot.val();
+        const updatedFeedbacks = adminData.feedback.filter(
+          (_, i) => i !== index
+        );
+        await update(feedbackRef, {
+          feedback: updatedFeedbacks,
+        });
+        setUserFeedbacks(updatedFeedbacks.slice(-5));
+      }
     }
   };
 
@@ -92,9 +94,7 @@ const Feedback = () => {
       <Header
         title={
           <TypewriterEffectSmooth
-            words={[
-              { text: "Feed Back", className: "text-blue-500" },
-            ]}
+            words={[{ text: "Feed Back", className: "text-blue-500" }]}
           />
         }
         subtitle="Every improvement starts with a feedback"
@@ -112,8 +112,9 @@ const Feedback = () => {
         sx={{
           border: `2px solid ${colors.grey[600]}`,
           boxShadow: `0 0 10px ${colors.grey[600]}`,
-          '@media (prefers-color-scheme: dark)': {
-            bgcolor: '#18181b', // Equivalent to dark:bg-zinc-900
+
+          "@media (prefers-color-scheme: dark)": {
+            bgcolor: "#18181b", // Equivalent to dark:bg-zinc-900
           },
         }}
       >
@@ -132,11 +133,6 @@ const Feedback = () => {
             color: colors.grey[100],
             outline: "none",
             transition: "border-color 0.3s",
-          }}
-          sx={{
-            border: `2px solid ${colors.tealAccent[600]}`,
-            boxShadow: `0 0 10px ${colors.tealAccent[600]}`,
-           
           }}
           onFocus={(e) => (e.target.style.borderColor = "cyan")}
           onBlur={(e) => (e.target.style.borderColor = colors.grey[100])}
@@ -162,9 +158,10 @@ const Feedback = () => {
         <Typography variant="h4" mb="20px">
           Previous Feedback
         </Typography>
-        {userFeedbacks.map((feedback) => (
+
+        {userFeedbacks.map((feedback, index) => (
           <Card
-            key={feedback.id}
+            key={index}
             sx={{
               p: "20px",
               mb: "20px",
@@ -188,23 +185,22 @@ const Feedback = () => {
             >
               <Box display="flex" alignItems="center">
                 <Avatar sx={{ width: 40, height: 40, mr: 2 }}>
-                  {feedback.name ? feedback.name.charAt(0) : "A"}{" "}
-                  {/* Handle undefined name */}
+                  {userInfo.name.charAt(0)}
                 </Avatar>
                 <Box>
-                  <Typography variant="body1">
-                    {feedback.name || "Anonymous"}{" "}
-                    {/* Fallback for undefined name */}
-                  </Typography>
+                  <Typography variant="body1">{userInfo.name}</Typography>
                   <Typography variant="body2" color={colors.grey[500]}>
-                    {feedback.email}
+                    {userInfo.email}
                   </Typography>
                 </Box>
               </Box>
-              <Typography variant="body2">{feedback.role}</Typography>
+
+              <IconButton onClick={() => handleDelete(index)} sx={{ mb: 0.2 }}>
+                <DeleteIcon />
+              </IconButton>
             </Box>
             <Typography variant="body2" mt="10px" color={colors.grey[100]}>
-              {feedback.feedback}
+              {feedback}
             </Typography>
           </Card>
         ))}
